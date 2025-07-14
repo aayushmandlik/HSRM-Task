@@ -41,6 +41,8 @@ async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(beare
         raise HTTPException(status_code=401, detail="Invalid token")
 
 def get_current_user(payload=Depends(verify_token)):
+    if payload.get("role") != "user":
+        raise HTTPException(status_code=403, detail="User access only")
     return payload
 
 def require_admin(payload=Depends(verify_token)):
