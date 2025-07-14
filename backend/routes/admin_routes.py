@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter, HTTPException, Depends
 from databases.database import admins_collection
 from schemas.admin_schema import AdminRegister, AdminLogin
 from core.config import ADMIN_VERIFICATION_CODE
-from core.security import create_access_token
+from core.security import create_access_token,require_admin
 from passlib.context import CryptContext
 from schemas.token_schema import TokenResponse
 
@@ -28,4 +29,10 @@ async def login(admin: AdminLogin):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_access_token({"email": record["email"], "role": "admin", "name": record["name"]})
-    return {"token": token, "role": "admin", "email": record["email"], "name": record["name"]}
+    return {"access_token": token,"token_type":"bearer", "role": "admin", "email": record["email"], "name": record["name"]}
+
+
+@router.get("/dashboard")
+async def dashboard(current_admin: dict = Depends(require_admin)):
+    return {"message": f"Welcome Admin {current_admin['email']}"}
+

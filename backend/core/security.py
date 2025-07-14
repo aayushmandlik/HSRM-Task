@@ -1,14 +1,11 @@
+
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from core.config import SECRET_KEY, ALGORITHM
-
-
-# DATABASE_URL = "mongodb+srv://aayushmandlik:Aayush@123@cluster0.beiyj9c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-# MONGO_INITDB_DATABASE="hrms_db"
-# SECRET_KEY="AuthenticationKey"
-# ALGORITHM="HS256"
-# ACCESS_TOKEN_EXPIRE_MINUTES=60
-# ADMIN_VERIFICATION_CODE="HARDCODED123"
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+from core.config import SECRET_KEY, ALGORITHM
 
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
@@ -17,9 +14,36 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_refresh_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=7)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
 def verify_token(token: str):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
         return payload
     except JWTError:
         return None
+
+
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    if credentials is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+def get_current_user(payload=Depends(verify_token)):
+    return payload
+
+def require_admin(payload=Depends(verify_token)):
+    if payload.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access only")
+    return payload
