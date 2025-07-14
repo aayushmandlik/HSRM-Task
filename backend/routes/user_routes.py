@@ -1,3 +1,60 @@
+# from fastapi import APIRouter,HTTPException,Depends
+# from databases.database import users_collection
+# from schemas.user_schema import UserLogin,UserRegister
+# from schemas.token_schema import TokenResponse
+# from passlib.context import CryptContext
+# from core.security import create_access_token,get_current_user
+# from fastapi.security import OAuth2PasswordRequestForm
+
+
+# router = APIRouter(prefix='/api/users', tags=['User'])
+# pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
+
+# def verify_password(plain_password, hashed_password):
+#     return pwd_context.verify(plain_password, hashed_password)
+
+# @router.post("/register")
+# async def register(user: UserRegister):
+#     existing = await users_collection.find_one({"email": user.email})
+#     if existing:
+#         raise HTTPException(status_code=400,detail="User Already exists")
+#     hashed = pwd_context.hash(user.password)
+#     await users_collection.insert_one({**user.dict(),"password":hashed})
+#     return {"message":"User Registered"}
+
+# # @router.post("/login",response_model=TokenResponse)
+# # async def login(user: UserLogin):
+# #     record = await users_collection.find_one({"email":user.email})
+# #     if not record or not pwd_context.verify(user.password,record["password"]):
+# #         raise HTTPException(status_code=401,detail="Invalid Credentials")
+# #     token = create_access_token({"email":record["email"], "role":"user", "name":record["name"]})
+# #     return {"token":token, "role":"user", "email":record["email"], "name":record["name"]}
+
+# @router.post('/login',response_model=TokenResponse)
+# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+#     user_record = await users_collection.find_one({"email": form_data.username})
+#     if not user_record or not verify_password(form_data.password, user_record["password"]):
+#         raise HTTPException(status_code=400, detail="Invalid credentials")
+#     data = {"name": user_record["name"], "email": user_record["email"], "role": "user"}
+#     access_token = create_access_token(data)
+#     # refresh_token = create_refresh_token(data)
+#     return {
+#         "token": access_token,
+#         # "refresh_token": refresh_token,
+#         # "token_type": "bearer"
+#         "role":data["role"],
+#         "email":data["email"],
+#         "name":data["name"]
+#     }
+
+# @router.get("/profile")
+# def get_profile(current_user: dict = Depends(get_current_user)):
+#     return {"message": f"Welcome {current_user['name']}",
+#             "email": current_user["email"],
+#             "role": current_user["role"]
+#             }
+
+
 from fastapi import APIRouter,HTTPException,Depends
 from databases.database import users_collection
 from schemas.user_schema import UserLogin,UserRegister
