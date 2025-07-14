@@ -22,3 +22,4 @@ db = conn[settings.MONGO_INITDB_DATABASE]
 
 users_collection = db['users']
 admins_collection = db['admin']
+employee_collection = db['employees']
