@@ -65,8 +65,8 @@ async def login(admin: AdminLogin):
     if not record or not pwd_context.verify(admin.password, record["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    token = create_access_token({"email": record["email"], "role": "admin", "name": record["name"]})
-    return {"access_token": token,"token_type":"bearer", "role": "admin", "email": record["email"], "name": record["name"]}
+    token = create_access_token({"user_id": str(record["_id"]),"email": record["email"], "role": "admin", "name": record["name"]})
+    return {"access_token": token,"token_type":"bearer", "role": "admin", "email": record["email"], "name": record["name"],"user_id": str(record["_id"])}
 
 
 @router.get("/dashboard")

@@ -57,7 +57,7 @@
 
 from fastapi import APIRouter,HTTPException,Depends
 from databases.database import users_collection
-from schemas.user_schema import UserLogin,UserRegister
+from schemas.user_schema import UserLogin,UserRegister,UserOut
 from schemas.token_schema import TokenResponse
 from passlib.context import CryptContext
 from core.security import create_access_token,verify_token,create_refresh_token,get_current_user
@@ -89,14 +89,21 @@ def require_admin(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access only")
     return current_user
 
-@router.post("/register")
+@router.post("/register", response_model=UserOut)
 async def register(user: UserRegister):
     existing = await users_collection.find_one({"email": user.email})
     if existing:
-        raise HTTPException(status_code=400,detail="User Already exists")
+        raise HTTPException(status_code=400, detail="User Already exists")
+
     hashed = pwd_context.hash(user.password)
-    await users_collection.insert_one({**user.dict(),"password":hashed})
-    return {"message":"User Registered"}
+    result = await users_collection.insert_one({**user.dict(), "password": hashed})
+    new_user = await users_collection.find_one({"_id": result.inserted_id})
+    return UserOut(
+        id = str(new_user["_id"]),
+        name = new_user["name"],
+        email = new_user["email"],
+        message = "User Registered Successfully"
+    )
 
 # @router.post("/login",response_model=TokenResponse)
 # async def login(user: UserLogin):
@@ -119,18 +126,25 @@ async def register(user: UserRegister):
 #     # return {"access_token":access_token,"token_type": "bearer"}
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user: UserLogin):  # Expects JSON: { "email": "...", "password": "..." }
+async def login(user: UserLogin):
     record = await users_collection.find_one({"email": user.email})
     if not record or not pwd_context.verify(user.password, record["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    token = create_access_token({"email": record["email"], "role": "user", "name": record["name"]})
+    token = create_access_token({
+        "user_id": str(record["_id"]),    
+        "email": record["email"],
+        "role": "user",
+        "name": record["name"]
+    })
+
     return {
         "access_token": token,
         "token_type": "bearer",
         "email": record["email"],
         "name": record["name"],
-        "role": "user"
+        "role": "user",
+        "user_id": str(record["_id"])
     }
 
 

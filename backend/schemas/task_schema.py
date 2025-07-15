@@ -10,10 +10,11 @@ class commentSchema(BaseModel):
 class TaskCreate(BaseModel):
     title: str
     description: str
-    assigned_to: List[str]
+    assigned_to_emails: List[str]
     assigned_by: str
     priority: str = "Normal"
     due_date: Optional[datetime] = None
+    
 
 class TaskUpdate(BaseModel):
     status: str
