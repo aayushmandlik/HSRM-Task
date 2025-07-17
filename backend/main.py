@@ -6,6 +6,8 @@ from routes.emp_routes import router as emp_router
 from routes.task_routes import router as task_router
 from routes.attendance_routes import router as attendance_router
 from routes.admin_attendance_routes import router as admin_attendance_router
+from routes.leave_routes import router as emp_leave_router
+from routes.admin_leave_routes import router as admin_leave_router
 app = FastAPI()
 
 
@@ -24,3 +26,5 @@ app.include_router(emp_router)
 app.include_router(task_router)
 app.include_router(attendance_router)
 app.include_router(admin_attendance_router)
+app.include_router(emp_leave_router)
+app.include_router(admin_leave_router)
