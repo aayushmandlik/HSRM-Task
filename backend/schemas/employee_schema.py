@@ -1,4 +1,4 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr
 from datetime import date
 from typing import Optional
 
@@ -12,14 +12,12 @@ class EmployeeCreate(BaseModel):
     dob: Optional[str] = None
     address: Optional[str] = None
     profile_image: Optional[str] = None
-
     department: str
     designation: str
     date_of_joining: str
     location: str
     reporting_manager_id: Optional[str]
     reporting_manager: Optional[str] = None
-
 
 class EmployeeUpdate(BaseModel):
     name: Optional[str]
@@ -36,6 +34,6 @@ class EmployeeUpdate(BaseModel):
     reporting_manager_id: Optional[str]
     reporting_manager: Optional[str]
 
-
 class EmployeeOut(EmployeeCreate):
+    _id: str
     status: str

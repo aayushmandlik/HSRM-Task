@@ -1,153 +1,65 @@
-# from fastapi import APIRouter,HTTPException,Depends
-# from databases.database import users_collection
-# from schemas.user_schema import UserLogin,UserRegister
-# from schemas.token_schema import TokenResponse
-# from passlib.context import CryptContext
-# from core.security import create_access_token,get_current_user
-# from fastapi.security import OAuth2PasswordRequestForm
-
-
-# router = APIRouter(prefix='/api/users', tags=['User'])
-# pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
-
-# def verify_password(plain_password, hashed_password):
-#     return pwd_context.verify(plain_password, hashed_password)
-
-# @router.post("/register")
-# async def register(user: UserRegister):
-#     existing = await users_collection.find_one({"email": user.email})
-#     if existing:
-#         raise HTTPException(status_code=400,detail="User Already exists")
-#     hashed = pwd_context.hash(user.password)
-#     await users_collection.insert_one({**user.dict(),"password":hashed})
-#     return {"message":"User Registered"}
-
-# # @router.post("/login",response_model=TokenResponse)
-# # async def login(user: UserLogin):
-# #     record = await users_collection.find_one({"email":user.email})
-# #     if not record or not pwd_context.verify(user.password,record["password"]):
-# #         raise HTTPException(status_code=401,detail="Invalid Credentials")
-# #     token = create_access_token({"email":record["email"], "role":"user", "name":record["name"]})
-# #     return {"token":token, "role":"user", "email":record["email"], "name":record["name"]}
-
-# @router.post('/login',response_model=TokenResponse)
-# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-#     user_record = await users_collection.find_one({"email": form_data.username})
-#     if not user_record or not verify_password(form_data.password, user_record["password"]):
-#         raise HTTPException(status_code=400, detail="Invalid credentials")
-#     data = {"name": user_record["name"], "email": user_record["email"], "role": "user"}
-#     access_token = create_access_token(data)
-#     # refresh_token = create_refresh_token(data)
-#     return {
-#         "token": access_token,
-#         # "refresh_token": refresh_token,
-#         # "token_type": "bearer"
-#         "role":data["role"],
-#         "email":data["email"],
-#         "name":data["name"]
-#     }
-
-# @router.get("/profile")
-# def get_profile(current_user: dict = Depends(get_current_user)):
-#     return {"message": f"Welcome {current_user['name']}",
-#             "email": current_user["email"],
-#             "role": current_user["role"]
-#             }
-
-
-from fastapi import APIRouter,HTTPException,Depends
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from databases.database import users_collection
-from schemas.user_schema import UserLogin,UserRegister,UserOut
-from schemas.token_schema import TokenResponse
+from schemas.user_schema import UserLogin, UserRegister, UserOut
+from schemas.token_schema import TokenResponse, TokenPayload
 from passlib.context import CryptContext
-from core.security import create_access_token,verify_token,create_refresh_token,get_current_user
+from core.security import create_access_token, create_refresh_token, get_current_user
 from typing import List
-from fastapi.security import OAuth2PasswordBearer,OAuth2PasswordRequestForm
 
 router = APIRouter(prefix='/api/users', tags=['User'])
-pwd_context = CryptContext(schemes=["bcrypt"],deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-
-# oauth2_scheme = OAuth2PasswordBearer(tokenUrl='api/users/login')
-
-# blacklisted_tokens: List[str] = []
-
-# Verify hashed password
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
-
-# Get current user using JWT
-# def get_current_user(token: str = Depends(oauth2_scheme)):
-#     payload = verify_token(token)
-#     if not payload:
-#         raise HTTPException(status_code=401, detail="Invalid or expired token")
-#     return payload
-
-
-def require_admin(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=403, detail="Admin access only")
-    return current_user
 
 @router.post("/register", response_model=UserOut)
 async def register(user: UserRegister):
     existing = await users_collection.find_one({"email": user.email})
     if existing:
-        raise HTTPException(status_code=400, detail="User Already exists")
+        raise HTTPException(status_code=400, detail="User already exists")
 
     hashed = pwd_context.hash(user.password)
-    result = await users_collection.insert_one({**user.dict(), "password": hashed})
+    user_dict = {**user.dict(), "password": hashed, "role": "user"}
+    result = await users_collection.insert_one(user_dict)
     new_user = await users_collection.find_one({"_id": result.inserted_id})
     return UserOut(
-        id = str(new_user["_id"]),
-        name = new_user["name"],
-        email = new_user["email"],
-        message = "User Registered Successfully"
+        id=str(new_user["_id"]),
+        name=new_user["name"],
+        email=new_user["email"],
+        message="User Registered Successfully"
     )
 
-# @router.post("/login",response_model=TokenResponse)
-# async def login(user: UserLogin):
-#     record = await users_collection.find_one({"email":user.email})
-#     if not record or not pwd_context.verify(user.password,record["password"]):
-#         raise HTTPException(status_code=401,detail="Invalid Credentials")
-#     token = create_access_token({"email":record["email"], "role":"user", "name":record["name"]})
-#     return {"token":token, "role":"user", "email":record["email"], "name":record["name"]}
-
-# @router.post('/login',response_model=TokenResponse)
-# async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-#     user_record = await users_collection.find_one({"email": form_data.username})
-#     if not user_record or not verify_password(form_data.password, user_record["password"]):
-#         raise HTTPException(status_code=400, detail="Invalid credentials")
-
-#     data = {"email": user_record["email"], "role": "user", "name":user_record["name"]}
-#     access_token = create_access_token(data)
-#     refresh_token = create_refresh_token(data)
-#     return {"access_token":access_token, "role":"user", "email":user_record["email"], "name":user_record["name"],"token_type":"bearer"}
-#     # return {"access_token":access_token,"token_type": "bearer"}
-
 @router.post("/login", response_model=TokenResponse)
-async def login(user: UserLogin):
-    record = await users_collection.find_one({"email": user.email})
-    if not record or not pwd_context.verify(user.password, record["password"]):
+async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+    record = await users_collection.find_one({"email": form_data.username})
+    if not record or not pwd_context.verify(form_data.password, record["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({
-        "user_id": str(record["_id"]),    
+        "user_id": str(record["_id"]),
         "email": record["email"],
-        "role": "user",
+        "role": record.get("role", "user"),
+        "name": record["name"]
+    })
+
+    refresh_token = create_refresh_token({
+        "user_id": str(record["_id"]),
+        "email": record["email"],
+        "role": record.get("role", "user"),
         "name": record["name"]
     })
 
     return {
         "access_token": token,
+        "refresh_token": refresh_token,
         "token_type": "bearer",
         "email": record["email"],
         "name": record["name"],
-        "role": "user",
+        "role": record.get("role", "user"),
         "user_id": str(record["_id"])
     }
 
-
 @router.get("/profile")
-async def get_profile(current_user: dict = Depends(get_current_user)):
-    return {"message": "Welcome", "user": current_user}
+async def get_profile(current_user: TokenPayload = Depends(get_current_user)):
+    return {"message": "Welcome", "user": current_user.dict()}

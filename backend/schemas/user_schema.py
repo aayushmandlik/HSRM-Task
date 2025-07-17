@@ -1,4 +1,5 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 
 class UserRegister(BaseModel):
     name: str
@@ -13,4 +14,4 @@ class UserOut(BaseModel):
     id: str
     name: str
     email: EmailStr
-    message: str
+    message: Optional[str] = None

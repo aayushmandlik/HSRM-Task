@@ -1,5 +1,5 @@
 from fastapi import HTTPException,Depends,APIRouter
-from databases.database import task_collection,users_collection
+from databases.database import task_collection,employee_collection
 from schemas.task_schema import TaskCreate,TaskUpdate,TaskOut,TaskComment
 from core.security import require_admin,get_current_user,require_admin_or_user
 from datetime import datetime
@@ -14,10 +14,10 @@ async def create_task(task: TaskCreate, current_admin: dict = Depends(require_ad
     # Find user_ids for each assigned email
     assigned_user_ids = []
     for email in task.assigned_to_emails:
-        user = await users_collection.find_one({"email": email})
-        if not user:
+        emp = await employee_collection.find_one({"email": email})
+        if not emp:
             raise HTTPException(status_code=404, detail=f"User not found for email: {email}")
-        assigned_user_ids.append(str(user["_id"]))
+        assigned_user_ids.append(str(emp["_id"]))
 
     task_data = {
         "title": task.title,
@@ -25,8 +25,8 @@ async def create_task(task: TaskCreate, current_admin: dict = Depends(require_ad
         "priority": task.priority or "Normal",
         "due_date": task.due_date,
         "status": "Pending",
-        "assigned_to": assigned_user_ids,  # list of user_ids
-        "assigned_by": current_admin["name"],
+        "assigned_to": assigned_user_ids, 
+        "assigned_by": current_admin.name,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
         "comments": []
