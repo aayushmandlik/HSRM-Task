@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 export class AuthComponent {
   isUser = true;
   isLogin = true;
+  isFlipping = false;
   userRegisterForm: FormGroup;
   userLoginForm: FormGroup;
   adminRegisterForm: FormGroup;
@@ -49,14 +50,25 @@ export class AuthComponent {
     });
   }
 
-  toggleUserType(): void {
-    this.isUser = !this.isUser;
-    this.errorMessage = null;
+  selectTab(isUser: boolean): void {
+    if (this.isUser !== isUser) {
+      this.isFlipping = true;
+      setTimeout(() => {
+        this.isUser = isUser;
+        this.isLogin = true; // Default to login form when switching tabs
+        this.isFlipping = false;
+        this.errorMessage = null;
+      }, 500); // Match animation duration
+    }
   }
 
   toggleFormType(): void {
-    this.isLogin = !this.isLogin;
-    this.errorMessage = null;
+    this.isFlipping = true;
+    setTimeout(() => {
+      this.isLogin = !this.isLogin;
+      this.isFlipping = false;
+      this.errorMessage = null;
+    }, 500); // Match animation duration
   }
 
   onUserRegister(): void {

@@ -1,134 +1,151 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100">
-  <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-    <h2 class="text-2xl font-bold mb-6 text-center">
-      {{ isUser ? 'User' : 'Admin' }} {{ isLogin ? 'Login' : 'Register' }}
-    </h2>
-    <div class="flex justify-center mb-4">
-      <button (click)="toggleUserType()" class="text-blue-500 hover:underline">
-        Switch to {{ isUser ? 'Admin' : 'User' }}
-      </button>
+<div class="min-h-screen flex items-center justify-center bg-gray-100 bg-[url('https://png.pngtree.com/png-clipart/20230824/original/pngtree-quarantine-office-people-employee-manager-picture-image_8420225.png')] bg-cover">
+  <!-- Flip Card Container -->
+  <div class="flip-container" [ngClass]="{'flip': isFlipping}">
+    <div class="flipper bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+      <!-- Tabs -->
+      <div class="flex border-b mb-6 w-96">
+        <button (click)="selectTab(true)" class="flex-1 py-2 text-center font-medium text-lg rounded-l-md"
+          [ngClass]="isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'">
+          User
+        </button>
+        <button (click)="selectTab(false)" class="flex-1 py-2 text-center font-medium text-lg rounded-r-md"
+          [ngClass]="!isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'">
+          Admin
+        </button>
+      </div>
+
+      <!-- User Login Form -->
+      <form *ngIf="isUser && isLogin && !isFlipping" [formGroup]="userLoginForm" (ngSubmit)="onUserLogin()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="userLoginForm.get('email')?.invalid && userLoginForm.get('email')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="userLoginForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="userLoginForm.get('email')?.errors?.['email']">Invalid email format</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="userLoginForm.get('password')?.invalid && userLoginForm.get('password')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="userLoginForm.get('password')?.errors?.['required']">Password is required</div>
+            <div *ngIf="userLoginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+        <button type="submit" [disabled]="userLoginForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+          Login
+        </button>
+        <div class="text-center mt-2">
+          Don't have an account?
+          <a (click)="toggleFormType()" class="text-blue-500 hover:underline cursor-pointer">Register</a>
+        </div>
+      </form>
+
+      <!-- User Register Form -->
+      <form *ngIf="isUser && !isLogin && !isFlipping" [formGroup]="userRegisterForm" (ngSubmit)="onUserRegister()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Name</label>
+          <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="userRegisterForm.get('name')?.invalid && userRegisterForm.get('name')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="userRegisterForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="userRegisterForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="userRegisterForm.get('email')?.invalid && userLoginForm.get('email')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="userRegisterForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="userRegisterForm.get('email')?.errors?.['email']">Invalid email format</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="userRegisterForm.get('password')?.invalid && userRegisterForm.get('password')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="userRegisterForm.get('password')?.errors?.['required']">Password is required</div>
+            <div *ngIf="userRegisterForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+        <button type="submit" [disabled]="userRegisterForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+          Register
+        </button>
+        <div class="text-center mt-2">
+          Already have an account?
+          <a (click)="toggleFormType()" class="text-blue-500 hover:underline cursor-pointer">Login</a>
+        </div>
+      </form>
+
+      <!-- Admin Login Form -->
+      <form *ngIf="!isUser && isLogin && !isFlipping" [formGroup]="adminLoginForm" (ngSubmit)="onAdminLogin()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminLoginForm.get('email')?.invalid && adminLoginForm.get('email')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminLoginForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="adminLoginForm.get('email')?.errors?.['email']">Invalid email format</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminLoginForm.get('password')?.invalid && adminLoginForm.get('password')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminLoginForm.get('password')?.errors?.['required']">Password is required</div>
+            <div *ngIf="adminLoginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+        <button type="submit" [disabled]="adminLoginForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+          Login
+        </button>
+        <div class="text-center mt-2">
+          Don't have an account?
+          <a (click)="toggleFormType()" class="text-blue-500 hover:underline cursor-pointer">Register</a>
+        </div>
+      </form>
+
+      <!-- Admin Register Form -->
+      <form *ngIf="!isUser && !isLogin && !isFlipping" [formGroup]="adminRegisterForm" (ngSubmit)="onAdminRegister()" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Name</label>
+          <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminRegisterForm.get('name')?.invalid && adminRegisterForm.get('name')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminRegisterForm.get('name')?.errors?.['required']">Name is required</div>
+            <div *ngIf="adminRegisterForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminRegisterForm.get('email')?.invalid && adminRegisterForm.get('email')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminRegisterForm.get('email')?.errors?.['required']">Email is required</div>
+            <div *ngIf="adminRegisterForm.get('email')?.errors?.['email']">Invalid email format</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminRegisterForm.get('password')?.invalid && adminRegisterForm.get('password')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminRegisterForm.get('password')?.errors?.['required']">Password is required</div>
+            <div *ngIf="adminRegisterForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Verification Code</label>
+          <input type="text" formControlName="code" class="mt-1 block w-full p-2 border rounded-md" />
+          <div *ngIf="adminRegisterForm.get('code')?.invalid && adminRegisterForm.get('code')?.touched" class="text-red-500 text-sm">
+            <div *ngIf="adminRegisterForm.get('code')?.errors?.['required']">Verification code is required</div>
+          </div>
+        </div>
+        <button type="submit" [disabled]="adminRegisterForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
+          Register
+        </button>
+        <div class="text-center mt-2">
+          Already have an account?
+          <a (click)="toggleFormType()" class="text-blue-500 hover:underline cursor-pointer">Login</a>
+        </div>
+      </form>
+
+      <div *ngIf="errorMessage" class="text-red-500 text-center mt-4">{{ errorMessage }}</div>
     </div>
-    <div class="flex justify-center mb-4">
-      <button (click)="toggleFormType()" class="text-blue-500 hover:underline">
-        Switch to {{ isLogin ? 'Register' : 'Login' }}
-      </button>
-    </div>
-
-    <!-- User Login Form -->
-    <form *ngIf="isUser && isLogin" [formGroup]="userLoginForm" (ngSubmit)="onUserLogin()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="userLoginForm.get('email')?.invalid && userLoginForm.get('email')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="userLoginForm.get('email')?.errors?.['required']">Email is required</div>
-          <div *ngIf="userLoginForm.get('email')?.errors?.['email']">Invalid email format</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="userLoginForm.get('password')?.invalid && userLoginForm.get('password')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="userLoginForm.get('password')?.errors?.['required']">Password is required</div>
-          <div *ngIf="userLoginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
-        </div>
-      </div>
-      <button type="submit" [disabled]="userLoginForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
-        Login
-      </button>
-    </form>
-
-    <!-- User Register Form -->
-    <form *ngIf="isUser && !isLogin" [formGroup]="userRegisterForm" (ngSubmit)="onUserRegister()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Name</label>
-        <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="userRegisterForm.get('name')?.invalid && userRegisterForm.get('name')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="userRegisterForm.get('name')?.errors?.['required']">Name is required</div>
-          <div *ngIf="userRegisterForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="userRegisterForm.get('email')?.invalid && userRegisterForm.get('email')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="userRegisterForm.get('email')?.errors?.['required']">Email is required</div>
-          <div *ngIf="userRegisterForm.get('email')?.errors?.['email']">Invalid email format</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="userRegisterForm.get('password')?.invalid && userRegisterForm.get('password')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="userRegisterForm.get('password')?.errors?.['required']">Password is required</div>
-          <div *ngIf="userRegisterForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
-        </div>
-      </div>
-      <button type="submit" [disabled]="userRegisterForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
-        Register
-      </button>
-    </form>
-
-    <!-- Admin Login Form -->
-    <form *ngIf="!isUser && isLogin" [formGroup]="adminLoginForm" (ngSubmit)="onAdminLogin()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminLoginForm.get('email')?.invalid && adminLoginForm.get('email')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminLoginForm.get('email')?.errors?.['required']">Email is required</div>
-          <div *ngIf="adminLoginForm.get('email')?.errors?.['email']">Invalid email format</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminLoginForm.get('password')?.invalid && adminLoginForm.get('password')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminLoginForm.get('password')?.errors?.['required']">Password is required</div>
-          <div *ngIf="adminLoginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
-        </div>
-      </div>
-      <button type="submit" [disabled]="adminLoginForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
-        Login
-      </button>
-    </form>
-
-    <!-- Admin Register Form -->
-    <form *ngIf="!isUser && !isLogin" [formGroup]="adminRegisterForm" (ngSubmit)="onAdminRegister()" class="space-y-4">
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Name</label>
-        <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminRegisterForm.get('name')?.invalid && adminRegisterForm.get('name')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminRegisterForm.get('name')?.errors?.['required']">Name is required</div>
-          <div *ngIf="adminRegisterForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminRegisterForm.get('email')?.invalid && adminRegisterForm.get('email')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminRegisterForm.get('email')?.errors?.['required']">Email is required</div>
-          <div *ngIf="adminRegisterForm.get('email')?.errors?.['email']">Invalid email format</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Password</label>
-        <input type="password" formControlName="password" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminRegisterForm.get('password')?.invalid && adminRegisterForm.get('password')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminRegisterForm.get('password')?.errors?.['required']">Password is required</div>
-          <div *ngIf="adminRegisterForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
-        </div>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Verification Code</label>
-        <input type="text" formControlName="code" class="mt-1 block w-full p-2 border rounded-md" />
-        <div *ngIf="adminRegisterForm.get('code')?.invalid && adminRegisterForm.get('code')?.touched" class="text-red-500 text-sm">
-          <div *ngIf="adminRegisterForm.get('code')?.errors?.['required']">Verification code is required</div>
-        </div>
-      </div>
-      <button type="submit" [disabled]="adminRegisterForm.invalid" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600">
-        Register
-      </button>
-    </form>
-
-    <div *ngIf="errorMessage" class="text-red-500 text-center mt-4">{{ errorMessage }}</div>
   </div>
 </div>

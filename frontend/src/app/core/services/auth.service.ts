@@ -31,6 +31,7 @@ export class AuthService {
       tap((response) => {
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
+        this.router.navigate(['/profile']);
       })
     );
   }
@@ -46,6 +47,7 @@ export class AuthService {
       tap((response) => {
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
+        this.router.navigate(['/admin/dashboard']);
       })
     );
   }
@@ -54,9 +56,23 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  getToken(): string | null {
+    const user = this.getCurrentUser();
+    return user ? user.access_token : null; // Assuming TokenResponse has a 'token' field
+  }
+
   logout(): void {
     localStorage.removeItem('auth_token');
     this.currentUserSubject.next(null);
     this.router.navigate(['/auth']);
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.getCurrentUser();
+  }
+
+  getUserRole(): string | null {
+    const user = this.getCurrentUser();
+    return user ? user.role : null;
   }
 }
