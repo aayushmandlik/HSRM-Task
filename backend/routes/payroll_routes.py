@@ -15,8 +15,8 @@ async def create_payroll(
     payroll: PayrollCreate,
     current_admin: TokenPayload = Depends(require_admin)
 ):
-    # Verify employee exists
-    employee = await employee_collection.find_one({"emp_code": payroll.employee_id,"email":payroll.email})
+    # Verify employee exists using emp_code and email
+    employee = await employee_collection.find_one({"emp_code": payroll.emp_code, "email": payroll.email})
     if not employee:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -31,11 +31,15 @@ async def create_payroll(
     payroll_dict["pay_period_start"] = datetime.combine(payroll.pay_period_start, datetime.min.time())
     payroll_dict["pay_period_end"] = datetime.combine(payroll.pay_period_end, datetime.min.time())
     payroll_dict.update({
+        "emp_code": payroll.emp_code,  # Store emp_code instead of employee_id
         "net_salary": net_salary,
         "status": "pending",
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     })
+
+    # Remove emp_code from payroll_dict if it was included as a top-level field by payroll.dict()
+    payroll_dict.pop("employee_id", None)
 
     result = await payroll_collection.insert_one(payroll_dict)
     payroll_dict["_id"] = str(result.inserted_id)
@@ -58,7 +62,7 @@ async def get_all_payrolls(
 async def get_my_payrolls(
     current_user: TokenPayload = Depends(require_admin_or_user)
 ):
-    # Verify employee exists for this user
+    # Verify employee exists for this user using user_id
     employee = await employee_collection.find_one({"user_id": current_user.user_id})
     if not employee:
         raise HTTPException(
@@ -66,7 +70,8 @@ async def get_my_payrolls(
             detail="Employee record not found for this user"
         )
     
-    payrolls_cursor = payroll_collection.find({"employee_id": current_user.user_id})
+    # Fetch payrolls using emp_code from employee record
+    payrolls_cursor = payroll_collection.find({"emp_code": employee["emp_code"]})
     payrolls = []
     async for payroll in payrolls_cursor:
         payroll["_id"] = str(payroll["_id"])
@@ -90,7 +95,7 @@ async def get_payroll_details(
         # Verify employee exists for this user if not admin
         if current_user.role != "admin":
             employee = await employee_collection.find_one({"user_id": current_user.user_id})
-            if not employee or payroll["employee_id"] != current_user.user_id:
+            if not employee or payroll["emp_code"] != employee["emp_code"]:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Not authorized to view this payroll record"

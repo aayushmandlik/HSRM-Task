@@ -3,7 +3,7 @@ from datetime import datetime, date
 from typing import Optional
 
 class PayrollCreate(BaseModel):
-    employee_id: str
+    emp_code: str
     email: str
     basic_salary: float
     bonus: float = 0.0
@@ -14,7 +14,7 @@ class PayrollCreate(BaseModel):
 
 class PayrollResponse(BaseModel):
     _id: str
-    employee_id: str
+    emp_code: str
     email: str
     basic_salary: float
     bonus: float
