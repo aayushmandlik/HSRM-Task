@@ -33,6 +33,9 @@ import { LeaveComponent } from './admin/leave/leave.component';
 import { AttendanceComponent } from './admin/attendance/attendance.component';
 import { PayrollComponent } from './admin/payroll/payroll.component';
 import { AdminDashboardContentComponent } from './admin/admin-dashboard-content/admin-dashboard-content.component';
+import { EmployeeDashboardContentComponent } from './employee/employee-dashboard-content/employee-dashboard-content.component';
+import { EmployeeTaskComponent } from './employee/employee-task/employee-task.component';
+import { EmployeeLeaveComponent } from './employee/employee-leave/employee-leave.component';
 
 export const routes: Routes = [
   { path: 'auth', component: AuthComponent },
@@ -40,7 +43,13 @@ export const routes: Routes = [
     path: 'profile', 
     component: UserProfileComponent, 
     canActivate: [AuthGuard], 
-    data: { role: 'user' } 
+    data: { role: 'user' } ,
+    children: [
+      {path: '', redirectTo: 'dashboard', pathMatch: 'full'},
+      {path: 'dashboard',component: EmployeeDashboardContentComponent, data: {title: 'Employee Dashboard'}},
+      {path: 'task', component: EmployeeTaskComponent, data: { title: 'Task' } },
+      {path: "leave", component: EmployeeLeaveComponent, data: {title: 'Leave'}}
+    ]
   },
   { 
     path: 'admin', 

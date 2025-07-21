@@ -17,6 +17,7 @@ class LeaveCreate(BaseModel):
 class LeaveResponse(BaseModel):
     _id: str
     employee_id: str
+    employee_name: str  # Added for admin identification
     start_date: date
     end_date: date
     leave_type: str
@@ -25,6 +26,9 @@ class LeaveResponse(BaseModel):
     days: int
     created_at: datetime
     updated_at: datetime
+    leave_taken: int = 0
+    remaining_leaves: int = 20
+    approved_by: Optional[str] = None  # Added to track who approved the leave
 
     class Config:
         orm_mode = True

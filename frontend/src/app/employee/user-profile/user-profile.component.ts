@@ -1,25 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../core/services/auth.service';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule,RouterLink,RouterModule],
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css']
 })
-export class UserProfileComponent implements OnInit {
-  user: any;
+export class UserProfileComponent {
+  selectedSection: string = 'employees';
 
-  constructor(private authService: AuthService) {}
-
-  ngOnInit(): void {
-    this.user = this.authService.getCurrentUser();
-  }
-
-  logout(): void {
-    this.authService.logout();
+  selectSection(section: string): void {
+    this.selectedSection = section;
   }
 }

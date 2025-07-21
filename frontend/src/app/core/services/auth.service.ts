@@ -38,33 +38,31 @@ export class AuthService {
       tap((response) => {
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
-        this.router.navigate(['/profile']);
+        this.router.navigate(['/profile/dashboard']);
       })
     );
   }
 
   adminRegister(admin: AdminRegister): Observable<any> {
-    // Assuming admin registration requires a special code; adjust logic as needed
-    return this.http.post(`${this.apiUrl}/users/register`, { ...admin, role: 'admin' }).pipe(
+    return this.http.post(`${this.apiUrl}/admin/register`, admin).pipe(
       tap(() => console.log('Admin registered'))
     );
   }
 
   adminLogin(admin: AdminLogin): Observable<TokenResponse> {
-    const formData = new URLSearchParams();
-    formData.set('username', admin.email); // Map email to username
-    formData.set('password', admin.password);
+    const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
 
-    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
-
-    return this.http.post<TokenResponse>(`${this.apiUrl}/users/login`, formData.toString(), { headers }).pipe(
+    return this.http.post<TokenResponse>(`${this.apiUrl}/admin/login`, admin, { headers }).pipe(
       tap((response) => {
         if (response.role !== 'admin') {
-          throw new Error('Admin access denied');
+          throw new Error('Admin access denied: Role is not admin');
         }
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
         this.router.navigate(['/admin/dashboard']);
+      }, (err) => {
+        console.error('Admin login error:', err);
+        throw err;
       })
     );
   }
@@ -75,7 +73,7 @@ export class AuthService {
 
   getToken(): string | null {
     const user = this.getCurrentUser();
-    return user ? user.access_token : null; // Adjust based on your TokenResponse structure
+    return user ? user.access_token : null; // Match the TokenResponse structure
   }
 
   logout(): void {

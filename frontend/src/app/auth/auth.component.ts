@@ -83,7 +83,7 @@ export class AuthComponent {
   onUserLogin(): void {
     if (this.userLoginForm.valid) {
       this.authService.userLogin(this.userLoginForm.value).subscribe({
-        next: () => this.router.navigate(['/profile']),
+        next: () => this.router.navigate(['/profile/dashboard']),
         error: (err) => this.errorMessage = err.error.detail || 'Login failed'
       });
     }

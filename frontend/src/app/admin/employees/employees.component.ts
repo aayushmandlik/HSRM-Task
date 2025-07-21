@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
-import { EmployeeCreate } from 'src/app/core/interfaces/employee.interface';
+import { EmployeeCreate, EmployeeUpdate } from 'src/app/core/interfaces/employee.interface';
 import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
@@ -36,7 +36,7 @@ export class EmployeesComponent implements OnInit {
       location: ['', [Validators.required]],
       reporting_manager_id: [''],
       reporting_manager: [''],
-      status: ['']
+      status: [''] // Ensure status is included if required by the backend
     });
     this.ttlempicon = "src/assets/ttlempicon.png";
   }
@@ -159,5 +159,4 @@ export class EmployeesComponent implements OnInit {
       error: (err) => console.error('Error deleting employee:', err)
     });
   }
-  
 }

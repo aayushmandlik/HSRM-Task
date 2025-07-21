@@ -14,6 +14,7 @@ export interface EmployeeCreate {
   location: string;
   reporting_manager_id?: string;
   reporting_manager?: string;
+  status?: string;
 }
 
 export interface EmployeeUpdate {
@@ -30,6 +31,7 @@ export interface EmployeeUpdate {
   location?: string;
   reporting_manager_id?: string;
   reporting_manager?: string;
+  status?: string;
 }
 
 export interface EmployeeOut extends EmployeeCreate {
