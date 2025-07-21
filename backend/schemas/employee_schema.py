@@ -3,7 +3,7 @@ from datetime import date
 from typing import Optional
 
 class EmployeeCreate(BaseModel):
-    user_id: str
+    # user_id: str
     emp_code: str
     name: str
     email: EmailStr
@@ -18,6 +18,7 @@ class EmployeeCreate(BaseModel):
     location: str
     reporting_manager_id: Optional[str]
     reporting_manager: Optional[str] = None
+    status: str
 
 class EmployeeUpdate(BaseModel):
     name: Optional[str]
@@ -33,6 +34,7 @@ class EmployeeUpdate(BaseModel):
     location: Optional[str]
     reporting_manager_id: Optional[str]
     reporting_manager: Optional[str]
+    status: str
 
 class EmployeeOut(EmployeeCreate):
     _id: str

@@ -1,13 +1,159 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
+import { TaskCreate, TaskOut, TaskUpdate } from 'src/app/core/interfaces/task.interface';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
-  selector: 'app-task',
+  selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
   templateUrl: './task.component.html',
   styleUrls: ['./task.component.css']
 })
-export class TaskComponent {
+export class TaskComponent implements OnInit {
+  isModalOpen = false;
+  taskForm: FormGroup;
+  tasks: any[] = [];
+  ttlempicon: string = '';
+  selectedTaskId: string | null = null;
+  errorMessage: string | null = null;
 
+  constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
+    this.taskForm = this.fb.group({
+      title: ['', [Validators.required]],
+      description: ['', [Validators.required]],
+      assigned_to_emails: [''], // Initialize as string for comma-separated input
+      assigned_by: ['', [Validators.required]],
+      priority: ['Normal'],
+      due_date: [''],
+      status: ['', [Validators.required]],
+      project: ['', [Validators.required]]
+    });
+    this.ttlempicon = "src/assets/ttlempicon.png";
+  }
+
+  ngOnInit() {
+    this.loadTasks();
+  }
+
+  openModal(taskId: string | null = null) {
+    this.isModalOpen = true;
+    this.selectedTaskId = taskId;
+    this.taskForm.reset();
+    this.errorMessage = null;
+
+    if (taskId && this.tasks.length > 0) {
+      const task = this.tasks.find(t => t.id === taskId);
+      if (task) {
+        console.log('Pre-filling with:', task);
+        this.taskForm.patchValue({
+          title: task.title || '',
+          description: task.description || '',
+          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '', // Join array into string
+          assigned_by: task.assigned_by || '',
+          priority: task.priority || 'Normal',
+          due_date: task.due_date || '',
+          status: task.status || '',
+          project: task.project || ''
+        });
+      } else {
+        console.warn('Task not found for id:', taskId);
+      }
+    }
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+    this.taskForm.reset();
+    this.selectedTaskId = null;
+    this.errorMessage = null;
+  }
+
+  onSubmit() {
+    if (this.taskForm.valid) {
+      let taskData: TaskCreate | TaskUpdate = { ...this.taskForm.value }; // Create a copy to avoid mutating form directly
+      // Ensure assigned_to_emails is an array
+      if (typeof taskData.assigned_to_emails === 'string' && taskData.assigned_to_emails.trim()) {
+        taskData.assigned_to_emails = taskData.assigned_to_emails.split(',').map((email: string) => email.trim());
+      } else if (!Array.isArray(taskData.assigned_to_emails)) {
+        taskData.assigned_to_emails = [];
+      }
+      console.log('Submitting Data:', taskData);
+      const token = this.authService.getToken();
+      if (!token) {
+        console.error('No token available. Please log in.');
+        return;
+      }
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+      if (this.selectedTaskId) {
+        this.http.put(`http://localhost:8000/tasks/${this.selectedTaskId}`, taskData, { headers }).subscribe({
+          next: (response) => {
+            console.log('Task updated:', response);
+            this.closeModal();
+            this.loadTasks();
+          },
+          error: (err) => {
+            console.error('Error updating task:', err);
+            this.errorMessage = err.error.detail || 'Error updating task';
+          }
+        });
+      } else {
+        this.http.post('http://localhost:8000/tasks/', taskData, { headers }).subscribe({
+          next: (response) => {
+            console.log('Task added:', response);
+            this.closeModal();
+            this.loadTasks();
+          },
+          error: (err) => {
+            console.error('Error adding task:', err);
+            this.errorMessage = err.error.detail || 'Error adding task';
+          }
+        });
+      }
+    }
+  }
+
+  loadTasks() {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('No token available. Please log in as an admin.');
+      return;
+    }
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http.get<any[]>('http://localhost:8000/tasks/', { headers }).subscribe({
+      next: (data) => {
+        this.tasks = data;
+        console.log('Loaded Tasks:', data);
+      },
+      error: (err) => console.error('Error loading tasks:', err)
+    });
+  }
+
+  deleteTask(taskId: string) {
+    if (!taskId) {
+      console.error('taskId is undefined in deleteTask');
+      return;
+    }
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('No token available. Please log in as an admin.');
+      return;
+    }
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    this.http.delete(`http://localhost:8000/tasks/${taskId}`, { headers }).subscribe({
+      next: (response) => {
+        console.log('Task deleted:', response);
+        this.loadTasks();
+      },
+      error: (err) => {
+        console.error('Error deleting task:', err);
+        this.errorMessage = err.error?.detail || 'Error deleting task';
+      }
+    });
+  }
 }

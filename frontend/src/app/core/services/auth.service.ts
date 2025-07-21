@@ -1,5 +1,6 @@
+// src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
 import { UserRegister, UserLogin, AdminRegister, AdminLogin, TokenResponse } from '../interfaces/user.interface';
 import { tap } from 'rxjs/operators';
@@ -27,7 +28,13 @@ export class AuthService {
   }
 
   userLogin(user: UserLogin): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/users/login`, user).pipe(
+    const formData = new URLSearchParams();
+    formData.set('username', user.email); // Map email to username
+    formData.set('password', user.password);
+
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
+    return this.http.post<TokenResponse>(`${this.apiUrl}/users/login`, formData.toString(), { headers }).pipe(
       tap((response) => {
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
@@ -37,14 +44,24 @@ export class AuthService {
   }
 
   adminRegister(admin: AdminRegister): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/register`, admin).pipe(
+    // Assuming admin registration requires a special code; adjust logic as needed
+    return this.http.post(`${this.apiUrl}/users/register`, { ...admin, role: 'admin' }).pipe(
       tap(() => console.log('Admin registered'))
     );
   }
 
   adminLogin(admin: AdminLogin): Observable<TokenResponse> {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/admin/login`, admin).pipe(
+    const formData = new URLSearchParams();
+    formData.set('username', admin.email); // Map email to username
+    formData.set('password', admin.password);
+
+    const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });
+
+    return this.http.post<TokenResponse>(`${this.apiUrl}/users/login`, formData.toString(), { headers }).pipe(
       tap((response) => {
+        if (response.role !== 'admin') {
+          throw new Error('Admin access denied');
+        }
         localStorage.setItem('auth_token', JSON.stringify(response));
         this.currentUserSubject.next(response);
         this.router.navigate(['/admin/dashboard']);
@@ -58,7 +75,7 @@ export class AuthService {
 
   getToken(): string | null {
     const user = this.getCurrentUser();
-    return user ? user.access_token : null; // Assuming TokenResponse has a 'token' field
+    return user ? user.access_token : null; // Adjust based on your TokenResponse structure
   }
 
   logout(): void {

@@ -14,9 +14,21 @@ class TaskCreate(BaseModel):
     assigned_by: str
     priority: str = "Normal"
     due_date: Optional[datetime] = None
+    status: str
+    project: str
     
-
 class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    assigned_to_emails: Optional[List[str]] = None
+    assigned_by: Optional[str] = None
+    priority: Optional[str] = None
+    due_date: Optional[datetime] = None
+    status: Optional[str] = None
+    project: Optional[str] = None
+
+
+class TaskUpdateStatus(BaseModel):
     status: str
 
 class TaskComment(BaseModel):
@@ -34,4 +46,5 @@ class TaskOut(BaseModel):
     due_date: Optional[datetime]
     created_at: datetime
     updated_at: datetime
-    comments: List[commentSchema] = []
+    comments: List[commentSchema] = [],
+    project: Optional[str]
