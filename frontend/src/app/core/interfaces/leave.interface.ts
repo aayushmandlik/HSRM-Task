@@ -21,3 +21,17 @@ export interface LeaveResponse {
   remaining_leaves: number;
   approved_by: string | null;
 }
+
+
+export interface LeaveUpdate {
+    start_date: string
+    end_date: string
+    leave_type: string
+    reason: string
+    // status: string
+}
+
+export interface LeaveUpdateStatus{
+    status: string,
+    approved_by: string
+}

@@ -1,1 +1,112 @@
-<p>leave works!</p>
+<div class="p-3">
+  <div class="flex items-center justify-between bg-white px-8 py-5 rounded-xl">
+    <div class="flex flex-col">
+      <h1 class="text-3xl font-semibold">Leave Management</h1>
+      <div class="flex gap-1 text-sm">
+        <img src="https://cdn-icons-png.flaticon.com/128/8006/8006286.png" alt="" class="w-4 h-4 mt-1">
+        <p>/</p>
+        <p>Leave</p>
+        <p>/</p>
+        <p>Leave List</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Leave Requests -->
+  <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
+    <h3 class="text-2xl font-semibold mb-4">Pending Leave Requests (Count: {{ pendingLeavesCount }})</h3>
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-200 rounded-xl">
+          <th class="text-left items-center p-3">Emp Name</th>
+          <th class="text-left items-center p-3">Leave Type</th>
+          <th class="text-left items-center p-3">Start Date</th>
+          <th class="text-left items-center p-3">End Date</th>
+          <th class="text-left items-center p-3">No of Days</th>
+          <th class="text-left items-center p-3">Reason</th>
+          <th class="text-left items-center p-3">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let leave of pendingLeaves" class="py-2">
+          <td class="py-2 pl-3">{{ leave.employee_name }}</td>
+          <td class="py-2 pl-3">{{ leave.leave_type }}</td>
+          <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
+          <td class="py-2 pl-3">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
+          <td class="py-2 pl-3">{{ leave.days }}</td>
+          <td class="py-2 pl-3">{{ leave.reason }}</td>
+          <td class="py-2 pl-3">
+            <button (click)="openModal(leave._id)" class="bg-blue-500 text-white px-3 py-1 rounded">
+              Update Status
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal for Updating Status -->
+  <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mt-36 mb-10 py-5">
+      <div class="flex justify-between items-center mb-5">
+        <h2 class="text-2xl font-bold">Update Leave Status</h2>
+        <button (click)="closeModal()"><img src="https://cdn-icons-png.flaticon.com/128/1828/1828843.png" alt="Close" class="w-4 h-4"></button>
+      </div>
+      <form [formGroup]="leaveForm" (ngSubmit)="updateLeaveStatus()" class="flex flex-col gap-4">
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+          <select id="status" formControlName="status" class="mt-1 block w-full h-10 rounded-md border border-gray-300 shadow-sm text-center">
+            <option value="">Select Status</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <div *ngIf="leaveForm.get('status')?.touched && leaveForm.get('status')?.invalid" class="text-red-500 text-sm">
+            Please select a status
+          </div>
+        </div>
+        <div>
+          <label for="approved_by" class="block text-sm font-medium text-gray-700">Approved By</label>
+          <input id="approved_by" formControlName="approved_by" type="text" class="mt-1 block w-full h-10 rounded-md border border-gray-300 shadow-sm text-center" placeholder="Enter name or ID">
+          <div *ngIf="leaveForm.get('approved_by')?.touched && leaveForm.get('approved_by')?.invalid" class="text-red-500 text-sm">
+            Please enter who approved
+          </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+          <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded" [disabled]="leaveForm.invalid">Update</button>
+        </div>
+      </form>
+      <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>
+      <div *ngIf="successMessage" class="text-green-500 mt-2">{{ successMessage }}</div>
+    </div>
+  </div>
+
+  <!-- Approved/Rejected Leave Requests -->
+  <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
+    <h3 class="text-2xl font-semibold mb-4">Approved/Rejected Leave Requests</h3>
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-200 rounded-xl">
+          <th class="text-left items-center p-3">Employee Name</th>
+          <th class="text-left items-center p-3">Leave Type</th>
+          <th class="text-left items-center p-3">Start Date</th>
+          <th class="text-left items-center p-3">End Date</th>
+          <th class="text-left items-center p-3">No of Days</th>
+          <th class="text-left items-center p-3">Status</th>
+          <th class="text-left items-center p-3">Approved/Declined By</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let leave of approvedRejectedLeaves" class="py-2">
+          <td class="py-2 pl-3">{{ leave.employee_name }}</td>
+          <td class="py-2 pl-3">{{ leave.leave_type }}</td>
+          <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
+          <td class="py-2 pl-3">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
+          <td class="py-2 pl-3">{{ leave.days }}</td>
+          <td class="py-2 pl-3">{{ leave.status }}</td>
+          <td class="py-2 pl-3">{{ leave.approved_by || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

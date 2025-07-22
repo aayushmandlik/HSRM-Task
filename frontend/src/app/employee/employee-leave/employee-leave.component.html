@@ -109,32 +109,54 @@
 
   <!-- Leave List -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-2xl font-semibold mb-4">All Leave Requests</h3>
+    <div class="flex gap-2">
+        <h3 class="text-2xl font-semibold mb-4">All Leave Requests</h3>
+        <p class="mt-1.5 text-red-500 font-semibold text-xs bg-red-200 rounded-md px-3 h-6 items-center pt-1">Total Leaves Taken: {{totalLeavesTaken}} </p>
+        <p class="mt-1.5 text-slate-500 font-semibold text-xs bg-slate-200 rounded-md px-3 h-6 items-center pt-1">Remaining Leaves: {{remainingLeaves}}</p>
+    </div>
     <table class="w-full">
       <thead>
         <tr class="bg-slate-200 rounded-xl">
-          <th class="text-left items-center p-3 rounded-l-md">Employee Name</th>
+          <th class="text-left items-center p-3">Leave Type</th>
           <th class="text-left items-center p-3">Start Date</th>
           <th class="text-left items-center p-3">End Date</th>
-          <th class="text-left items-center p-3">Leave Type</th>
-          <th class="text-left items-center p-3">Days</th>
+          <th class="text-left items-center p-3">No of Days</th>
           <th class="text-left items-center p-3">Status</th>
-          <th class="text-left items-center p-3">Approved By</th>
-          <th class="text-left items-center p-3 rounded-r-md">Remaining Leaves</th>
+          <th class="text-left items-center p-3">Approved/Declined By</th>
+          <th class="text-left items-center p-3">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let leave of leaves" class="py-2">
-          <td class="py-2 pl-3">{{ leave.employee_name }}</td>
+          <td class="py-2 pl-3 flex items-center gap-2">
+            {{ leave.leave_type }}
+            <span class="cursor-pointer" 
+                  [title]="leave.reason || 'No reason provided'"
+                  (mouseenter)="showTooltip(leave._id, leave.reason)"
+                  (mouseleave)="hideTooltip()">
+              <img src="https://cdn-icons-png.flaticon.com/128/11420/11420166.png" alt="" class="w-5 h-5 mt-1">
+            </span>
+          </td>
           <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
-          <td class="py-2 pl-3">{{ leave.leave_type }}</td>
           <td class="py-2 pl-3">{{ leave.days }}</td>
           <td class="py-2 pl-3">{{ leave.status }}</td>
           <td class="py-2 pl-3">{{ leave.approved_by || 'N/A' }}</td>
-          <td class="py-2 pl-3">{{ leave.remaining_leaves }}</td>
+          <td class="py-2 pl-3 flex gap-2">
+            <!-- <button *ngIf="leave.status === 'pending'" 
+                    (click)="openModal(leave._id)" >
+                    <img src="https://cdn-icons-png.flaticon.com/128/12102/12102064.png" alt="Edit" class="w-4 h-4">
+            </button> -->
+            <button *ngIf="leave.status === 'pending'" 
+                    (click)="deleteLeave(leave._id)" >
+                    <img src="https://cdn-icons-png.flaticon.com/128/9790/9790368.png" alt="Delete" class="w-4 h-4">
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
+    <div *ngIf="tooltipVisible && hoveredLeaveId" class="absolute bg-gray-800 text-white p-2 rounded mt-2 z-10">
+      {{ tooltipText }}
+    </div>
   </div>
 </div>

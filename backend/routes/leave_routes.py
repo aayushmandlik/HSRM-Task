@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from typing import List
-from datetime import date, datetime
 from bson import ObjectId
-from schemas.leave_schema import LeaveCreate, LeaveResponse, LeaveUpdate, LeaveStatus
-from databases.database import leave_collection, users_collection  # Assume users_collection exists
+from schemas.leave_schema import LeaveCreate, LeaveResponse, LeaveUpdate,LeaveUpdateStatus, LeaveStatus
+from databases.database import leave_collection, employee_collection, users_collection 
 from core.security import require_admin, require_admin_or_user, TokenPayload
 from datetime import date
+from datetime import datetime
 
 router = APIRouter(prefix="/Emp_leave", tags=["Employee Leave"])
 
@@ -51,8 +51,8 @@ async def request_leave(
         )
 
     # Fetch employee name (assuming it's in users_collection)
-    user = await users_collection.find_one({"_id": ObjectId(current_user.user_id)})
-    employee_name = user.get("name", "Unknown Employee") if user else "Unknown Employee"
+    emp = await employee_collection.find_one({"user_id": current_user.user_id})
+    employee_name = emp.get("name", "Unknown Employee") if emp else "Unknown Employee"
 
     leave_dict = leave.dict()
     leave_dict["start_date"] = datetime.combine(leave.start_date, datetime.min.time())
@@ -73,11 +73,120 @@ async def request_leave(
     leave_dict["_id"] = str(result.inserted_id)
     return leave_dict
 
-# Rest of the routes (patch, get) remain unchanged
+@router.patch("/{leave_id}", response_model=LeaveResponse)
+async def update_leave(
+    leave_id: str,
+    update: LeaveUpdate,
+    current_user: TokenPayload = Depends(require_admin_or_user)
+):
+    try:
+        leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
+        if not leave:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Leave request not found"
+            )
+
+        if leave["employee_id"] != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to update this leave request"
+            )
+
+        if leave["status"] != LeaveStatus.PENDING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only pending leave requests can be updated"
+            )
+
+        update_data = update.dict(exclude_unset=True)
+        if "start_date" in update_data or "end_date" in update_data:
+            start_date = update_data.get("start_date", leave["start_date"].date())
+            end_date = update_data.get("end_date", leave["end_date"].date())
+            if start_date > end_date:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="End date must be after start date"
+                )
+            days = calculate_leave_days(start_date, end_date)
+            if days <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid date range"
+                )
+            _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
+            if remaining_leaves + leave["days"] - days < 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Insufficient leave balance. Remaining: {remaining_leaves} days, Adjusted Request: {days} days"
+                )
+            update_data["days"] = days
+            update_data["start_date"] = datetime.combine(start_date, datetime.min.time())
+            update_data["end_date"] = datetime.combine(end_date, datetime.min.time())
+
+        update_data["updated_at"] = datetime.utcnow()
+        updated = await leave_collection.find_one_and_update(
+            {"_id": ObjectId(leave_id)},
+            {"$set": update_data},
+            return_document=True
+        )
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Leave request not found"
+            )
+
+        updated["_id"] = str(updated["_id"])
+        return updated
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid leave ID format"
+        )
+
+@router.delete("/{leave_id}")
+async def delete_leave(
+    leave_id: str,
+    current_user: TokenPayload = Depends(require_admin_or_user)
+):
+    try:
+        leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
+        if not leave:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Leave request not found"
+            )
+
+        if leave["employee_id"] != current_user.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not authorized to delete this leave request"
+            )
+
+        if leave["status"] != LeaveStatus.PENDING:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only pending leave requests can be deleted"
+            )
+
+        result = await leave_collection.delete_one({"_id": ObjectId(leave_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Leave request not found"
+            )
+
+        return {"message": "Leave request deleted successfully"}
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid leave ID format"
+        )
+
 @router.patch("/{leave_id}/status", response_model=LeaveResponse)
 async def update_leave_status(
     leave_id: str,
-    update: LeaveUpdate,
+    update: LeaveUpdateStatus,
     current_user: TokenPayload = Depends(require_admin)
 ):
     try:

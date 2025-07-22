@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from datetime import date, datetime
 from enum import Enum
 from typing import Optional
@@ -15,9 +15,9 @@ class LeaveCreate(BaseModel):
     reason: str
 
 class LeaveResponse(BaseModel):
-    _id: str
+    id: str = Field(..., alias="_id")
     employee_id: str
-    employee_name: str  # Added for admin identification
+    employee_name: str  
     start_date: date
     end_date: date
     leave_type: str
@@ -28,10 +28,18 @@ class LeaveResponse(BaseModel):
     updated_at: datetime
     leave_taken: int = 0
     remaining_leaves: int = 20
-    approved_by: Optional[str] = None  # Added to track who approved the leave
+    approved_by: Optional[str] = None 
 
     class Config:
         orm_mode = True
 
-class LeaveUpdate(BaseModel):
+class LeaveUpdateStatus(BaseModel):
     status: LeaveStatus
+    approved_by: str
+
+class LeaveUpdate(BaseModel):
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    leave_type: Optional[str] = None
+    reason: Optional[str] = None
+    # status: Optional[LeaveStatus] = None

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -17,7 +17,10 @@ export class EmployeeLeaveComponent implements OnInit {
   leaves: LeaveResponse[] = [];
   errorMessage: string | null = null;
   successMessage: string | null = null;
-  isModalOpen: boolean = false; // Add modal state
+  isModalOpen: boolean = false;
+  tooltipVisible: boolean = false;
+  hoveredLeaveId: string | null = null;
+  tooltipText: string = '';
 
   constructor(
     private fb: FormBuilder,
@@ -63,13 +66,14 @@ export class EmployeeLeaveComponent implements OnInit {
       }
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
+      // Only create new leave
       this.http.post<LeaveResponse>(`http://localhost:8000/Emp_leave/request`, leaveData, { headers }).subscribe({
         next: (response) => {
           console.log('Leave request submitted:', response);
           this.successMessage = 'Leave request submitted successfully!';
           this.leaveForm.reset();
           this.loadMyLeaveRequests();
-          this.closeModal(); // Close modal after submission
+          this.closeModal();
         },
         error: (err) => {
           console.error('Error submitting leave request:', err);
@@ -81,8 +85,9 @@ export class EmployeeLeaveComponent implements OnInit {
 
   openModal() {
     this.isModalOpen = true;
-    this.successMessage = null; // Clear success message when opening modal
-    this.errorMessage = null;   // Clear error message when opening modal
+    this.successMessage = null;
+    this.errorMessage = null;
+    this.leaveForm.reset();
   }
 
   closeModal() {
@@ -92,11 +97,67 @@ export class EmployeeLeaveComponent implements OnInit {
     this.errorMessage = null;
   }
 
+  deleteLeave(leaveId: string) {
+    const token = this.authService.getToken();
+    if (!token) {
+      console.error('No token available. Please log in.');
+      return;
+    }
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+    if (confirm('Are you sure you want to delete this leave request?')) {
+      this.http.delete(`http://localhost:8000/Emp_leave/${leaveId}`, { headers }).subscribe({
+        next: () => {
+          console.log('Leave deleted:', leaveId);
+          this.successMessage = 'Leave deleted successfully!';
+          this.loadMyLeaveRequests();
+        },
+        error: (err) => {
+          console.error('Error deleting leave:', err);
+          this.errorMessage = err.error.detail || 'Error deleting leave';
+        }
+      });
+    }
+  }
+
+  showTooltip(leaveId: string, reason: string) {
+    this.hoveredLeaveId = leaveId;
+    this.tooltipText = reason || 'No reason provided';
+    this.tooltipVisible = true;
+  }
+
+  hideTooltip() {
+    this.tooltipVisible = false;
+    this.hoveredLeaveId = null;
+    this.tooltipText = '';
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClick(event: MouseEvent) {
+    if (this.tooltipVisible && !this.isModalOpen) {
+      const tooltip = document.querySelector('.absolute.bg-gray-800');
+      if (tooltip && !tooltip.contains(event.target as Node)) {
+        this.hideTooltip();
+      }
+    }
+  }
+
   get pendingLeavesCount(): number {
     return this.leaves.filter(leave => leave.status === 'pending').length;
   }
 
   get approvedLeavesCount(): number {
     return this.leaves.filter(leave => leave.status === 'approved').length;
+  }
+
+  get totalLeavesTaken(): number {
+    return this.leaves
+      .filter(leave => leave.status === 'approved') // Only count approved leaves
+      .reduce((sum, leave) => sum + leave.days, 0); // Sum the days of approved leaves
+  }
+
+  get remainingLeaves(): number {
+    const initialLeaves = 20; // Assuming initial leave balance is 20 days
+    return initialLeaves - this.totalLeavesTaken; // Remaining = Initial - Total Taken
   }
 }
