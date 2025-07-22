@@ -55,10 +55,10 @@ export class AuthComponent {
       this.isFlipping = true;
       setTimeout(() => {
         this.isUser = isUser;
-        this.isLogin = true; // Default to login form when switching tabs
+        this.isLogin = true;
         this.isFlipping = false;
         this.errorMessage = null;
-      }, 500); // Match animation duration
+      }, 500);
     }
   }
 
@@ -68,7 +68,7 @@ export class AuthComponent {
       this.isLogin = !this.isLogin;
       this.isFlipping = false;
       this.errorMessage = null;
-    }, 500); // Match animation duration
+    }, 500);
   }
 
   onUserRegister(): void {

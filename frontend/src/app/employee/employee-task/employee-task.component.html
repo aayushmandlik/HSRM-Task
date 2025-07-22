@@ -1,64 +1,82 @@
 <div class="container mx-auto p-4">
-  <h2 class="text-2xl font-bold mb-4">My Tasks</h2>
+  <div class="flex items-center justify-between bg-white px-8 py-5 rounded-xl shadow-lg">
+    <div class="flex flex-col">
+      <h1 class="text-3xl font-semibold text-gray-800">Tasks</h1>
+      <div class="flex gap-1 text-sm text-gray-600">
+        <img src="https://cdn-icons-png.flaticon.com/128/8006/8006286.png" alt="" class="w-4 h-4 mt-1">
+        <p>/</p>
+        <p>Tasks</p>
+        <p>/</p>
+        <p>Task List</p>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <input type="date" [(ngModel)]="filterDate" (change)="onDateChange($event)" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange($event)" placeholder="Search by title..." class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+  </div>
 
   <!-- Error Message -->
-  <div *ngIf="errorMessage" class="text-red-500 mb-4">{{ errorMessage }}</div>
+  <div *ngIf="errorMessage" class="text-red-500 mb-4 text-center bg-red-100 p-2 rounded-md">{{ errorMessage }}</div>
 
   <!-- Tasks Table -->
-  <table class="min-w-full bg-white border border-gray-300">
-    <thead>
-      <tr class="bg-gray-200">
-        <th class="py-2 px-4 border-b">Title</th>
-        <th class="py-2 px-4 border-b">Description</th>
-        <th class="py-2 px-4 border-b">Assigned To</th>
-        <th class="py-2 px-4 border-b">Assigned By</th>
-        <th class="py-2 px-4 border-b">Status</th>
-        <th class="py-2 px-4 border-b">Priority</th>
-        <th class="py-2 px-4 border-b">Due Date</th>
-        <th class="py-2 px-4 border-b">Project</th>
-        <th class="py-2 px-4 border-b">Comments</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let task of tasks" class="hover:bg-gray-100">
-        <td class="py-2 px-4 border-b">{{ task.title }}</td>
-        <td class="py-2 px-4 border-b">{{ task.description }}</td>
-        <td class="py-2 px-4 border-b">{{ task.assigned_to.join(', ') }}</td>
-        <td class="py-2 px-4 border-b">{{ task.assigned_by }}</td>
-        <td class="py-2 px-4 border-b">
-          <select (change)="updateTaskStatus(task.id, $event)" class="border p-1">
-            <option *ngIf="!task.status" value="">Select Status</option>
-            <option *ngFor="let status of ['Pending', 'In Progress', 'Completed']" [value]="status" [selected]="task.status === status">
-              {{ status }}
-            </option>
-          </select>
-        </td>
-        <td class="py-2 px-4 border-b">{{ task.priority }}</td>
-        <td class="py-2 px-4 border-b">{{ task.due_date | date:'medium' }}</td>
-        <td class="py-2 px-4 border-b">{{ task.project || 'N/A' }}</td>
-        <td class="py-2 px-4 border-b">
-          <img src="src/assets/comment-icon.png" (click)="openCommentModal(task.id)" alt="Add Comment" class="w-6 h-6 cursor-pointer">
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="mt-6 overflow-x-auto">
+    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+      <thead>
+        <tr class="bg-slate-200 rounded-xl">
+          <th class="py-3 px-4 border-b text-left font-semibold rounded-l-md">Title</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Description</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Assigned To</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Assigned By</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Created At</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Status</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Priority</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Due Date</th>
+          <th class="py-3 px-4 border-b text-left font-semibold">Project</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let task of filteredTasks" class="hover:bg-gray-50 transition duration-200">
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.title }}</td>
+          <td class="py-2 pl-4 border-b text-gray-600">{{ task.description }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.assigned_to.join(', ') }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.assigned_by }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.created_at | date:'medium' }}</td>
+          <td class="py-2 pl-4 border-b">
+            <select (change)="updateTaskStatus(task.id, $event)" class="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option *ngIf="!task.status" value="">Select Status</option>
+              <option *ngFor="let status of ['Pending', 'In Progress', 'Completed']" [value]="status" [selected]="task.status === status">
+                {{ status }}
+              </option>
+            </select>
+          </td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.priority }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.due_date | date:'medium' }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.project || 'N/A' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div *ngIf="filteredTasks.length === 0" class="text-center text-gray-500 mt-4">No tasks found.</div>
+  </div>
 
   <!-- Comment Modal -->
-  <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg w-1/3">
-      <h3 class="text-lg font-bold mb-4">Add Comment</h3>
-      <form (ngSubmit)="onSubmitComment()" [formGroup]="commentForm">
-        <div class="mb-4">
+  <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg w-1/3 shadow-lg">
+      <h3 class="text-lg font-bold mb-4 text-gray-800">Add Comment</h3>
+      <form (ngSubmit)="onSubmitComment()" [formGroup]="commentForm" class="space-y-4">
+        <div>
           <label for="user_id" class="block text-sm font-medium text-gray-700">User ID</label>
-          <input id="user_id" formControlName="user_id" type="text" class="mt-1 block w-full border rounded p-2">
+          <input id="user_id" formControlName="user_id" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <div *ngIf="commentForm.get('user_id')?.touched && commentForm.get('user_id')?.invalid" class="text-red-500 text-sm">User ID is required</div>
         </div>
-        <div class="mb-4">
+        <div>
           <label for="message" class="block text-sm font-medium text-gray-700">Message</label>
-          <textarea id="message" formControlName="message" class="mt-1 block w-full border rounded p-2" rows="3"></textarea>
+          <textarea id="message" formControlName="message" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+          <div *ngIf="commentForm.get('message')?.touched && commentForm.get('message')?.invalid" class="text-red-500 text-sm">Message is required</div>
         </div>
-        <div class="flex justify-end">
-          <button type="button" (click)="closeCommentModal()" class="mr-2 px-4 py-2 bg-gray-300 rounded">Cancel</button>
-          <button type="submit" [disabled]="!commentForm.valid" class="px-4 py-2 bg-blue-500 text-white rounded">Submit</button>
+        <div class="flex justify-end space-x-2">
+          <button type="button" (click)="closeCommentModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancel</button>
+          <button type="submit" [disabled]="!commentForm.valid" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Submit</button>
         </div>
       </form>
       <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>

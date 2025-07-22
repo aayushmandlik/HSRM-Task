@@ -8,7 +8,6 @@ from routes.attendance_routes import router as attendance_router
 from routes.admin_attendance_routes import router as admin_attendance_router
 from routes.leave_routes import router as emp_leave_router
 from routes.admin_leave_routes import router as admin_leave_router
-from routes.payroll_routes import router as payroll_router
 app = FastAPI()
 
 
@@ -29,4 +28,3 @@ app.include_router(attendance_router)
 app.include_router(admin_attendance_router)
 app.include_router(emp_leave_router)
 app.include_router(admin_leave_router)
-app.include_router(payroll_router)

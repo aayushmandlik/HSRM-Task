@@ -10,13 +10,13 @@ router = APIRouter(prefix="/tasks", tags={"Tasks"})
 
 @router.post("/", response_model=TaskOut)
 async def create_task(task: TaskCreate, current_admin: dict = Depends(require_admin)):
-    # Find user_ids for each assigned name
+    
     assigned_user_ids = []
     for name in task.assigned_to_emails:
         emp = await employee_collection.find_one({"name": name.strip()})
         if not emp:
             raise HTTPException(status_code=404, detail=f"Employee not found for name: {name}")
-        assigned_user_ids.append(emp["user_id"])  # Store user_id instead of name
+        assigned_user_ids.append(emp["user_id"])  
 
     task_data = {
         "title": task.title,
@@ -24,7 +24,7 @@ async def create_task(task: TaskCreate, current_admin: dict = Depends(require_ad
         "priority": task.priority or "Normal",
         "due_date": task.due_date,
         "status": task.status or "Pending",
-        "assigned_to": assigned_user_ids,  # Store user_ids
+        "assigned_to": assigned_user_ids, 
         "assigned_by": task.assigned_by or current_admin.name,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),

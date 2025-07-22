@@ -15,23 +15,26 @@ import { AuthService } from 'src/app/core/services/auth.service';
 export class TaskComponent implements OnInit {
   isModalOpen = false;
   taskForm: FormGroup;
-  tasks: any[] = [];
+  tasks: TaskOut[] = [];
+  filteredTasks: TaskOut[] = [];
   ttlempicon: string = '';
   selectedTaskId: string | null = null;
   errorMessage: string | null = null;
+  searchTerm: string = '';
+  filterDate: string = '';
 
   constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      assigned_to_emails: [''], // Initialize as string for comma-separated input
+      assigned_to_emails: [''], 
       assigned_by: ['', [Validators.required]],
       priority: ['Normal'],
       due_date: [''],
       status: ['', [Validators.required]],
       project: ['', [Validators.required]]
     });
-    this.ttlempicon = "src/assets/ttlempicon.png";
+    
   }
 
   ngOnInit() {
@@ -51,7 +54,7 @@ export class TaskComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title || '',
           description: task.description || '',
-          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '', // Join array into string
+          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '', 
           assigned_by: task.assigned_by || '',
           priority: task.priority || 'Normal',
           due_date: task.due_date || '',
@@ -73,8 +76,7 @@ export class TaskComponent implements OnInit {
 
   onSubmit() {
     if (this.taskForm.valid) {
-      let taskData: TaskCreate | TaskUpdate = { ...this.taskForm.value }; // Create a copy to avoid mutating form directly
-      // Ensure assigned_to_emails is an array
+      let taskData: TaskCreate | TaskUpdate = { ...this.taskForm.value }; 
       if (typeof taskData.assigned_to_emails === 'string' && taskData.assigned_to_emails.trim()) {
         taskData.assigned_to_emails = taskData.assigned_to_emails.split(',').map((email: string) => email.trim());
       } else if (!Array.isArray(taskData.assigned_to_emails)) {
@@ -124,9 +126,10 @@ export class TaskComponent implements OnInit {
     }
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.get<any[]>('http://localhost:8000/tasks/', { headers }).subscribe({
+    this.http.get<TaskOut[]>('http://localhost:8000/tasks/', { headers }).subscribe({
       next: (data) => {
         this.tasks = data;
+        this.filterTasks();
         console.log('Loaded Tasks:', data);
       },
       error: (err) => console.error('Error loading tasks:', err)
@@ -155,5 +158,53 @@ export class TaskComponent implements OnInit {
         this.errorMessage = err.error?.detail || 'Error deleting task';
       }
     });
+  }
+
+  filterTasks() {
+    this.filteredTasks = this.tasks.filter(task => {
+      const priority = task.priority || ''; // Default to empty string if undefined
+      const dueDateStr = task.due_date ? task.due_date.toString() : '';
+      const createdAtStr = task.created_at ? task.created_at.toString() : '';
+
+      const matchesSearch = !this.searchTerm || 
+        task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.assigned_to.join(', ').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.assigned_by.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        task.status.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        priority.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        (task.project?.toLowerCase().includes(this.searchTerm.toLowerCase()) || false) ||
+        dueDateStr.includes(this.searchTerm) ||
+        createdAtStr.includes(this.searchTerm);
+
+      const matchesDate = !this.filterDate || 
+        createdAtStr.startsWith(this.filterDate);
+
+      return matchesSearch && matchesDate;
+    });
+  }
+
+  onSearch(event: Event) {
+    this.searchTerm = (event.target as HTMLInputElement).value;
+    this.filterTasks();
+  }
+
+  onDateFilter(event: Event) {
+    this.filterDate = (event.target as HTMLInputElement).value;
+    this.filterTasks();
+  }
+
+  // New methods to compute task counts
+  getPendingTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Pending').length;
+  }
+
+  getCompletedTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Completed').length;
+  }
+
+  getOverdueTasksCount(): number {
+    const now = new Date();
+    return this.tasks.filter(t => t.due_date && new Date(t.due_date) < now).length;
   }
 }

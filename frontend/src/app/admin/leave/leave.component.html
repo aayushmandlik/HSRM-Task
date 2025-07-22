@@ -12,6 +12,43 @@
     </div>
   </div>
 
+  <!-- Cards for Total Types of Leaves Taken -->
+  <div class="flex justify-between mt-10 gap-10">
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="assets/ttlempicon.png"
+          alt="" class="w-12 h-12 rounded-full">
+        <div>
+          <p class="font-bold text-xs text-slate-400">Casual Leaves</p>
+          <p>{{ getLeaveCount('Casual') }}</p>
+        </div>
+      </div>
+      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+5%</div>
+    </div>
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="assets/ttlempicon.png"
+          alt="" class="w-12 h-12 rounded-full">
+        <div>
+          <p class="font-bold text-xs text-slate-400">Medical Leaves</p>
+          <p>{{ getLeaveCount('Medical') }}</p>
+        </div>
+      </div>
+      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+5%</div>
+    </div>
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="assets/ttlempicon.png"
+          alt="" class="w-12 h-12 rounded-full">
+        <div>
+          <p class="font-bold text-xs text-slate-400">Annual Leaves</p>
+          <p>{{ getLeaveCount('Annual') }}</p>
+        </div>
+      </div>
+      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+5%</div>
+    </div>
+  </div>
+
   <!-- Pending Leave Requests -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-2xl font-semibold mb-4">Pending Leave Requests (Count: {{ pendingLeavesCount }})</h3>
@@ -84,6 +121,22 @@
   <!-- Approved/Rejected Leave Requests -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-2xl font-semibold mb-4">Approved/Rejected Leave Requests</h3>
+    <div class="flex mb-4 gap-4">
+      <input
+        type="text"
+        placeholder="Search by Employee Name..."
+        class="w-[80%] h-10 rounded-md border border-gray-300 shadow-sm px-3"
+        (input)="onSearch($event)"
+      />
+      <select
+        class=" w-[30%] h-10 rounded-md border border-gray-300 shadow-sm px-3"
+        (change)="onFilterStatus($event)"
+      >
+        <option value="">All</option>
+        <option value="approved">Approved</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
     <table class="w-full">
       <thead>
         <tr class="bg-slate-200 rounded-xl">
@@ -97,7 +150,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let leave of approvedRejectedLeaves" class="py-2">
+        <tr *ngFor="let leave of filteredApprovedRejectedLeaves" class="py-2">
           <td class="py-2 pl-3">{{ leave.employee_name }}</td>
           <td class="py-2 pl-3">{{ leave.leave_type }}</td>
           <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>

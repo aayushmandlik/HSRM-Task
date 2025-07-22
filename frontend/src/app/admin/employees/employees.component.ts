@@ -16,9 +16,13 @@ export class EmployeesComponent implements OnInit {
   isModalOpen = false;
   employeeForm: FormGroup;
   employees: any[] = [];
+  filteredEmployees: any[] = [];
   ttlempicon: string = '';
-  selectedEmployeeId: string | null = null; // Using emp_code as the identifier
+  selectedEmployeeId: string | null = null; 
   errorMessage: string | null = null;
+  searchTerm: string = '';
+  statusFilter: string = '';
+  departmentFilter: string = '';
 
   constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
     this.employeeForm = this.fb.group({
@@ -36,7 +40,7 @@ export class EmployeesComponent implements OnInit {
       location: ['', [Validators.required]],
       reporting_manager_id: [''],
       reporting_manager: [''],
-      status: [''] // Ensure status is included if required by the backend
+      status: [''] 
     });
     this.ttlempicon = "src/assets/ttlempicon.png";
   }
@@ -137,6 +141,7 @@ export class EmployeesComponent implements OnInit {
     this.http.get<any[]>('http://localhost:8000/employee/getall', { headers }).subscribe({
       next: (data) => {
         this.employees = data;
+        this.filteredEmployees = [...this.employees];
         console.log('Loaded Employees:', data);
       },
       error: (err) => console.error('Error loading employees:', err)
@@ -158,5 +163,48 @@ export class EmployeesComponent implements OnInit {
       },
       error: (err) => console.error('Error deleting employee:', err)
     });
+  }
+
+  onSearch(event: Event) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm = input.value.toLowerCase();
+    this.applyFilters();
+  }
+
+  onFilterStatus(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.statusFilter = select.value;
+    this.applyFilters();
+  }
+
+  onFilterDepartment(event: Event) {
+    const select = event.target as HTMLSelectElement;
+    this.departmentFilter = select.value;
+    this.applyFilters();
+  }
+
+  applyFilters() {
+    this.filteredEmployees = this.employees.filter(employee => {
+      const matchesSearch = employee.name.toLowerCase().includes(this.searchTerm);
+      const matchesStatus = !this.statusFilter || employee.status === this.statusFilter;
+      const matchesDepartment = !this.departmentFilter || employee.department === this.departmentFilter;
+      return matchesSearch && matchesStatus && matchesDepartment;
+    });
+  }
+
+  get getActiveCount(): number {
+    return this.employees.filter(employee => employee.status === 'Active').length;
+  }
+
+  get getInactiveCount(): number {
+    return this.employees.filter(employee => employee.status === 'InActive').length;
+  }
+
+  get getNewJoinersCount(): number {
+    const oneMonthAgo = new Date('2025-06-22'); 
+    return this.employees.filter(employee => {
+      const joinDate = new Date(employee.date_of_joining);
+      return joinDate >= oneMonthAgo && joinDate <= new Date();
+    }).length;
   }
 }
