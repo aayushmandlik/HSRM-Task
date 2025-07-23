@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,9 +19,6 @@ export class EmployeeLeaveComponent implements OnInit {
   errorMessage: string | null = null;
   successMessage: string | null = null;
   isModalOpen: boolean = false;
-  tooltipVisible: boolean = false;
-  hoveredLeaveId: string | null = null;
-  tooltipText: string = '';
   selectedLeaveId: string | null = null;
 
   constructor(
@@ -132,7 +129,7 @@ export class EmployeeLeaveComponent implements OnInit {
     this.errorMessage = null;
   }
 
-  onSubmitUpdate() {
+    onSubmitUpdate() {
     if (this.updateForm.valid && this.selectedLeaveId) {
       const updateData: LeaveUpdate = this.updateForm.value;
       const token = this.authService.getToken();
@@ -142,7 +139,7 @@ export class EmployeeLeaveComponent implements OnInit {
       }
       const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-      this.http.put<LeaveResponse>(`http://localhost:8000/Emp_leave/${this.selectedLeaveId}`, updateData, { headers }).subscribe({
+      this.http.patch<LeaveResponse>(`http://localhost:8000/Emp_leave/${this.selectedLeaveId}`, updateData, { headers }).subscribe({
         next: (response) => {
           console.log('Leave updated:', response);
           this.successMessage = 'Leave updated successfully!';
@@ -177,28 +174,6 @@ export class EmployeeLeaveComponent implements OnInit {
           this.errorMessage = err.error.detail || 'Error deleting leave';
         }
       });
-    }
-  }
-
-  showTooltip(leaveId: string, reason: string) {
-    this.hoveredLeaveId = leaveId;
-    this.tooltipText = reason || 'No reason provided';
-    this.tooltipVisible = true;
-  }
-
-  hideTooltip() {
-    this.tooltipVisible = false;
-    this.hoveredLeaveId = null;
-    this.tooltipText = '';
-  }
-
-  @HostListener('document:click', ['$event'])
-  onClick(event: MouseEvent) {
-    if (this.tooltipVisible && !this.isModalOpen) {
-      const tooltip = document.querySelector('.absolute.bg-gray-800');
-      if (tooltip && !tooltip.contains(event.target as Node)) {
-        this.hideTooltip();
-      }
     }
   }
 

@@ -175,10 +175,7 @@
         <tr *ngFor="let leave of leaves" class="py-2 hover:bg-gray-50 transition duration-200 border-b">
           <td class="py-2 pl-4 border-b flex items-center gap-2">
             {{ leave.leave_type }}
-            <span class="cursor-pointer" 
-                  [title]="leave.reason || 'No reason provided'"
-                  (mouseenter)="showTooltip(leave._id, leave.reason)"
-                  (mouseleave)="hideTooltip()">
+            <span class="cursor-pointer" [title]="leave.reason || 'No reason provided'">
               <img src="https://cdn-icons-png.flaticon.com/128/11420/11420166.png" alt="" class="w-5 h-5 mt-1">
             </span>
           </td>
@@ -204,8 +201,5 @@
         </tr>
       </tbody>
     </table>
-    <div *ngIf="tooltipVisible && hoveredLeaveId" class="absolute bg-gray-800 text-white p-2 rounded mt-2 z-10">
-      {{ tooltipText }}
-    </div>
   </div>
 </div>

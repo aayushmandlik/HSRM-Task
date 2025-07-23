@@ -90,4 +90,14 @@ export class AuthService {
     const user = this.getCurrentUser();
     return user ? user.role : null;
   }
+
+  getAdminName(): string | null {
+    const admin = this.getCurrentUser();
+    return admin ? admin.name : null
+  }
+
+  getUserName(): string | null {
+    const user = this.getCurrentUser();
+    return user ? user.name : null 
+  }
 }

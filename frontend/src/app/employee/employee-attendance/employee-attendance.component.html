@@ -1,24 +1,37 @@
 <div class="p-3">
   <div class="flex items-center justify-between bg-white px-8 py-5 rounded-xl">
     <div class="flex flex-col">
-      <h1 class="text-3xl font-semibold">Attendance Management</h1>
+      <h1 class="text-3xl font-semibold">Employee Attendance</h1>
       <div class="flex gap-1 text-sm">
         <img src="https://cdn-icons-png.flaticon.com/128/8006/8006286.png" alt="" class="w-4 h-4 mt-1">
         <p>/</p>
         <p>Attendance</p>
         <p>/</p>
-        <p>Attendance List</p>
+        <p>My Attendance</p>
       </div>
     </div>
-    <input type="date" [(ngModel)]="filterDate" (change)="onDateChange($event)" class="border p-2 rounded">
   </div>
 
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
-    <h3 class="text-2xl font-semibold mb-4">Attendance Logs</h3>
+    <h3 class="text-2xl font-semibold mb-4">Manage Attendance</h3>
+    <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()" class="mb-6">
+      <select formControlName="action" class="w-full p-2 border rounded mb-2">
+        <option value="" disabled selected>Select an action</option>
+        <option value="checkin">Check-In</option>
+        <option value="checkout">Check-Out</option>
+        <option value="breakin">Break-In</option>
+        <option value="breakout">Break-Out</option>
+      </select>
+      <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Submit</button>
+    </form>
+    <div *ngIf="successMessage" class="text-green-500 mb-2">{{ successMessage }}</div>
+    <div *ngIf="errorMessage" class="text-red-500 mb-2">{{ errorMessage }}</div>
+
+    <h3 class="text-2xl font-semibold mb-4 mt-6">My Attendance Logs</h3>
     <table class="w-full border-collapse">
       <thead>
         <tr class="bg-gradient-to-r from-slate-200 to-slate-300 text-gray-700">
-          <th class="p-3 text-left font-semibold rounded-tl-lg">Employee Name</th>
+          <th class="p-3 text-left font-semibold rounded-tl-lg">Date</th>
           <th class="p-3 text-left font-semibold">Check-In</th>
           <th class="p-3 text-left font-semibold">Check-Out</th>
           <th class="p-3 text-left font-semibold">Break-In</th>
@@ -29,17 +42,16 @@
       </thead>
       <tbody>
         <tr *ngFor="let log of attendanceLogs" class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
-          <td class="p-3">{{ log.employee_name || 'unknown' }}</td>
-          <td class="p-3">{{ log.check_in | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.check_out | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.break_in | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.break_out | date:'yyyy-MM-dd HH:mm' }}</td>
+          <td class="p-3">{{ log.check_in | date:'yyyy-MM-dd' }}</td>
+          <td class="p-3">{{ log.check_in | date:'HH:mm' || 'N/A' }}</td>
+          <td class="p-3">{{ log.check_out | date:'HH:mm' || 'N/A' }}</td>
+          <td class="p-3">{{ log.break_in | date:'HH:mm' || 'N/A' }}</td>
+          <td class="p-3">{{ log.break_out | date:'HH:mm' || 'N/A' }}</td>
           <td class="p-3">{{ log.total_hours || 'N/A' }}</td>
           <td class="p-3">{{ log.status }}</td>
         </tr>
       </tbody>
     </table>
-    <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>
     <div *ngIf="attendanceLogs.length === 0" class="text-center p-4 text-gray-500">
       No attendance logs available.
     </div>

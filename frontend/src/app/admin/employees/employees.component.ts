@@ -42,7 +42,6 @@ export class EmployeesComponent implements OnInit {
       reporting_manager: [''],
       status: [''] 
     });
-    this.ttlempicon = "src/assets/ttlempicon.png";
   }
 
   ngOnInit() {

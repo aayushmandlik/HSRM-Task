@@ -20,41 +20,41 @@
       <div class="flex gap-1 items-center">
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
-          <p class="font-bold text-xs text-slate-400">Total Employee</p>
-          <p>{{ employees.length }}</p>
+          <p class="font-bold text-2xl text-slate-400">Total Employee</p>
+          <!-- <p>{{ employees.length }}</p> -->
         </div>
       </div>
-      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{employees.length}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
-          <p class="font-bold text-xs text-slate-400">Active</p>
-          <p>{{ getActiveCount }}</p>
+          <p class="font-bold text-2xl text-slate-400">Active Employee</p>
+          <!-- <p>{{ getActiveCount }}</p> -->
         </div>
       </div>
-      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{getActiveCount}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
-          <p class="font-bold text-xs text-slate-400">InActive</p>
-          <p>{{ getInactiveCount }}</p>
+          <p class="font-bold text-2xl text-slate-400">InActive Employee</p>
+          <!-- <p>{{ getInactiveCount }}</p> -->
         </div>
       </div>
-      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{getInactiveCount}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
-          <p class="font-bold text-xs text-slate-400">New Joiners</p>
-          <p>{{ getNewJoinersCount }}</p>
+          <p class="font-bold text-2xl text-slate-400">New Employee</p>
+          <!-- <p>{{ getNewJoinersCount }}</p> -->
         </div>
       </div>
-      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-blue-200 text-blue-700 px-2 py-1 rounded-md font-semibold">{{getNewJoinersCount}}</div>
     </div>
   </div>
 
@@ -128,8 +128,10 @@
               <select id="department" formControlName="department"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
                 <option value="">Select Department</option>
-                <option value="FSD">FSD</option>
-                <option value="DE">DE</option>
+                <option value="Frontend Dev">Frontend Dev</option>
+                <option value="Full Stack Dev">Full Stack Dev</option>
+                <option value="Data Engineer">Data Engineer</option>
+                <option value="Data Analyst">Data Analyst</option>
                 <option value="Devops">Devops</option>
               </select>
             </div>

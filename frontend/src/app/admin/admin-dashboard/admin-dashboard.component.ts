@@ -1,12 +1,12 @@
 // import { Component, OnInit } from '@angular/core';
 // import { CommonModule } from '@angular/common';
 // import { AuthService } from '../../core/services/auth.service';
-// import { RouterLink } from '@angular/router';
+// import { RouterLink, RouterModule } from '@angular/router';
 
 // @Component({
 //   selector: 'app-admin-dashboard',
 //   standalone: true,
-//   imports: [CommonModule, RouterLink],
+//   imports: [CommonModule, RouterLink, RouterModule],
 //   templateUrl: './admin-dashboard.component.html',
 //   styleUrls: ['./admin-dashboard.component.css']
 // })
@@ -19,13 +19,22 @@
 //     this.admin = this.authService.getCurrentUser();
 //   }
 
+//   selectedSection: string = 'employees';
+
+//   selectSection(section: string): void {
+//     this.selectedSection = section;
+//   }
+
 //   logout(): void {
 //     this.authService.logout();
 //   }
 // }
+
+
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterModule } from '@angular/router';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -35,9 +44,15 @@ import { RouterLink, RouterModule } from '@angular/router';
   styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent {
-  selectedSection: string = 'employees';
+  // selectedSection: string = 'dashboard';
 
-  selectSection(section: string): void {
-    this.selectedSection = section;
+  constructor(private authservice: AuthService){}
+
+  // selectSection(section: string): void {
+  //   this.selectedSection = section;
+  // }
+
+  logout(): void{
+    this.authservice.logout();
   }
 }
