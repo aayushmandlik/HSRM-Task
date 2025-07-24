@@ -1,14 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/core/services/auth.service';
 import { Attendance } from 'src/app/core/interfaces/attendance.interface';
-
-// Define the expected API response structure
-interface ApiResponse {
-  message: string;
-}
+import { AttendanceService } from 'src/app/core/services/attendance.service';
+import { AuthService } from 'src/app/core/services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-employee-attendance',
@@ -20,11 +16,11 @@ interface ApiResponse {
 export class EmployeeAttendanceComponent implements OnInit {
   attendanceLogs: Attendance[] = [];
   errorMessage: string | null = null;
-  attendanceForm: FormGroup;
   successMessage: string | null = null;
+  attendanceForm: FormGroup;
 
   constructor(
-    private http: HttpClient,
+    private attendanceService: AttendanceService,
     private authService: AuthService,
     private fb: FormBuilder
   ) {
@@ -38,65 +34,55 @@ export class EmployeeAttendanceComponent implements OnInit {
   }
 
   loadAttendanceLogs() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<{ logs: Attendance[] }>(`http://localhost:8000/attendance/logs/me`, { headers }).subscribe({
+    this.attendanceService.getMyAttendanceLogs().subscribe({
       next: (data) => {
-        this.attendanceLogs = data.logs;
+        this.attendanceLogs = data;
         console.log('Loaded My Attendance Logs:', this.attendanceLogs);
+        this.errorMessage = null;
       },
       error: (err) => {
-        console.error('Error loading attendance logs:', err);
-        this.errorMessage = err.error?.detail || 'Error loading attendance logs';
+        console.error('Error loading my attendance logs:', err.message);
+        this.errorMessage = `Error loading my attendance logs: ${err.message || 'Unknown error'}`;
       }
     });
   }
 
   onSubmit() {
-    const token = this.authService.getToken();
-    if (!token) {
-      this.errorMessage = 'No token available. Please log in.';
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-    const action = this.attendanceForm.get('action')?.value;
+    if (this.attendanceForm.valid) {
+      const action = this.attendanceForm.get('action')?.value;
+      let request: Observable<{ message: string }>;
 
-    let url = '';
-    switch (action) {
-      case 'checkin':
-        url = 'http://localhost:8000/attendance/checkin';
-        break;
-      case 'checkout':
-        url = 'http://localhost:8000/attendance/checkout';
-        break;
-      case 'breakin':
-        url = 'http://localhost:8000/attendance/breakin';
-        break;
-      case 'breakout':
-        url = 'http://localhost:8000/attendance/breakout';
-        break;
-      default:
-        this.errorMessage = 'Invalid action selected.';
-        return;
-    }
-
-    this.http.post<ApiResponse>(url, {}, { headers }).subscribe({
-      next: (response) => {
-        this.successMessage = response.message; // Now type-safe
-        this.errorMessage = null;
-        this.attendanceForm.reset();
-        this.loadAttendanceLogs(); // Refresh logs after action
-      },
-      error: (err) => {
-        console.error('Error performing action:', err);
-        this.errorMessage = err.error?.detail || 'Error performing action';
-        this.successMessage = null;
+      switch (action) {
+        case 'checkin':
+          request = this.attendanceService.checkIn();
+          break;
+        case 'checkout':
+          request = this.attendanceService.checkOut();
+          break;
+        case 'breakin':
+          request = this.attendanceService.breakIn();
+          break;
+        case 'breakout':
+          request = this.attendanceService.breakOut();
+          break;
+        default:
+          this.errorMessage = 'Error performing action: Invalid action selected';
+          return;
       }
-    });
+
+      request.subscribe({
+        next: (response) => {
+          this.successMessage = response.message;
+          this.errorMessage = null;
+          this.attendanceForm.reset();
+          this.loadAttendanceLogs();
+        },
+        error: (err) => {
+          console.error('Error performing action:', err.message);
+          this.errorMessage = `Error performing action: ${err.message || 'Unknown error'}`;
+          this.successMessage = null;
+        }
+      });
+    }
   }
 }

@@ -8,7 +8,7 @@ from core.security import require_admin, TokenPayload
 
 router = APIRouter(prefix="/admin/leave", tags=["Admin Leave"])
 
-# Get all leave requests (Admin only)
+
 @router.get("/leaverequests", response_model=List[LeaveResponse])
 async def get_leave_requests(
     current_admin: TokenPayload = Depends(require_admin)
@@ -35,7 +35,7 @@ async def get_leave_requests(
         leaves.append(LeaveResponse(**leave_data))
     return leaves
 
-# Get only pending leave requests (Admin only)
+
 @router.get("/pendingrequests", response_model=List[LeaveResponse])
 async def get_pending_leave_requests(
     current_admin: TokenPayload = Depends(require_admin)
@@ -62,7 +62,7 @@ async def get_pending_leave_requests(
         leaves.append(LeaveResponse(**leave_data))
     return leaves
 
-# Approve/Reject leave (Admin only)
+
 @router.put("/{leave_id}/status", response_model=LeaveResponse)
 async def update_leave_status(
     leave_id: str,
@@ -77,7 +77,7 @@ async def update_leave_status(
                 detail="Leave request not found"
             )
         
-        # Update leave_taken and remaining_leaves only if status changes to APPROVED
+
         update_data = {
             "status": leave_update.status,
             "approved_by": leave_update.approved_by,

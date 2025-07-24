@@ -21,7 +21,6 @@
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
           <p class="font-bold text-2xl text-slate-400">Total Employee</p>
-          <!-- <p>{{ employees.length }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{employees.length}}</div>
@@ -31,7 +30,6 @@
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
           <p class="font-bold text-2xl text-slate-400">Active Employee</p>
-          <!-- <p>{{ getActiveCount }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{getActiveCount}}</div>
@@ -41,7 +39,6 @@
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
           <p class="font-bold text-2xl text-slate-400">InActive Employee</p>
-          <!-- <p>{{ getInactiveCount }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{getInactiveCount}}</div>
@@ -51,7 +48,6 @@
         <img src="assets/ttlempicon.png" alt="" class="w-12 h-12 rounded-full">
         <div>
           <p class="font-bold text-2xl text-slate-400">New Employee</p>
-          <!-- <p>{{ getNewJoinersCount }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-blue-200 text-blue-700 px-2 py-1 rounded-md font-semibold">{{getNewJoinersCount}}</div>
@@ -165,14 +161,12 @@
           </div>
           <div class="flex gap-4">
             <div class="w-1/2">
-              <label for="reporting_manager_id" class="block text-sm font-medium text-gray-700">Reporting Manager
-                ID</label>
+              <label for="reporting_manager_id" class="block text-sm font-medium text-gray-700">Reporting Manager ID</label>
               <input id="reporting_manager_id" formControlName="reporting_manager_id" type="text"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
             <div class="w-1/2">
-              <label for="reporting_manager" class="block text-sm font-medium text-gray-700">Reporting Manager
-                Name</label>
+              <label for="reporting_manager" class="block text-sm font-medium text-gray-700">Reporting Manager Name</label>
               <input id="reporting_manager" formControlName="reporting_manager" type="text"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
@@ -181,12 +175,14 @@
             <label for="address" class="block text-sm font-medium text-gray-700">Address</label>
             <textarea id="address" formControlName="address"
               class="mt-1 block w-full h-24 rounded-md border border-gray-300 shadow-sm text-center"></textarea>
+            <div *ngIf="errorMessage" class="text-red-500 text-sm mt-2 text-center">{{ errorMessage }}</div>
           </div>
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded" [disabled]="employeeForm.invalid">{{
-            selectedEmployeeId ? 'Update' : 'Submit' }}</button>
+          <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded" [disabled]="employeeForm.invalid">
+            {{ selectedEmployeeId ? 'Update' : 'Submit' }}
+          </button>
         </div>
       </form>
     </div>

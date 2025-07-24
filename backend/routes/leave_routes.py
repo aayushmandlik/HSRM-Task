@@ -42,7 +42,7 @@ async def request_leave(
             detail="Invalid date range"
         )
 
-    # Check remaining leaves
+
     _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
     if remaining_leaves < days:
         raise HTTPException(
@@ -50,7 +50,7 @@ async def request_leave(
             detail=f"Insufficient leave balance. Remaining: {remaining_leaves} days, Requested: {days} days"
         )
 
-    # Fetch employee name (assuming it's in users_collection)
+
     emp = await employee_collection.find_one({"user_id": current_user.user_id})
     employee_name = emp.get("name", "Unknown Employee") if emp else "Unknown Employee"
 
@@ -73,174 +73,6 @@ async def request_leave(
     leave_dict["_id"] = str(result.inserted_id)
     return leave_dict
 
-@router.patch("/{leave_id}", response_model=LeaveResponse)
-async def update_leave(
-    leave_id: str,
-    update: LeaveUpdate,
-    current_user: TokenPayload = Depends(require_admin_or_user)
-):
-    try:
-        leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
-        if not leave:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        if leave["employee_id"] != current_user.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to update this leave request"
-            )
-
-        if leave["status"] != LeaveStatus.PENDING:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only pending leave requests can be updated"
-            )
-
-        update_data = update.dict(exclude_unset=True)
-        if "start_date" in update_data or "end_date" in update_data:
-            start_date = update_data.get("start_date", leave["start_date"].date())
-            end_date = update_data.get("end_date", leave["end_date"].date())
-            if start_date > end_date:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="End date must be after start date"
-                )
-            days = calculate_leave_days(start_date, end_date)
-            if days <= 0:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date range"
-                )
-            _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
-            if remaining_leaves + leave["days"] - days < 0:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Insufficient leave balance. Remaining: {remaining_leaves} days, Adjusted Request: {days} days"
-                )
-            update_data["days"] = days
-            update_data["start_date"] = datetime.combine(start_date, datetime.min.time())
-            update_data["end_date"] = datetime.combine(end_date, datetime.min.time())
-
-        update_data["updated_at"] = datetime.utcnow()
-        updated = await leave_collection.find_one_and_update(
-            {"_id": ObjectId(leave_id)},
-            {"$set": update_data},
-            return_document=True
-        )
-        if not updated:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        updated["_id"] = str(updated["_id"])
-        return updated
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid leave ID format"
-        )
-
-@router.delete("/{leave_id}")
-async def delete_leave(
-    leave_id: str,
-    current_user: TokenPayload = Depends(require_admin_or_user)
-):
-    try:
-        leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
-        if not leave:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        if leave["employee_id"] != current_user.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to delete this leave request"
-            )
-
-        if leave["status"] != LeaveStatus.PENDING:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only pending leave requests can be deleted"
-            )
-
-        result = await leave_collection.delete_one({"_id": ObjectId(leave_id)})
-        if result.deleted_count == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        return {"message": "Leave request deleted successfully"}
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid leave ID format"
-        )
-
-@router.patch("/{leave_id}/status", response_model=LeaveResponse)
-async def update_leave_status(
-    leave_id: str,
-    update: LeaveUpdateStatus,
-    current_user: TokenPayload = Depends(require_admin)
-):
-    try:
-        leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
-        if not leave:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        if update.status == LeaveStatus.APPROVED and leave["status"] != LeaveStatus.APPROVED:
-            leave_taken, remaining_leaves = await get_employee_leave_balance(leave["employee_id"])
-            if remaining_leaves < leave["days"]:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Insufficient leave balance. Remaining: {remaining_leaves} days, Required: {leave['days']} days"
-                )
-            leave_taken += leave["days"]
-            remaining_leaves = 20 - leave_taken
-
-        updated = await leave_collection.find_one_and_update(
-            {"_id": ObjectId(leave_id)},
-            {
-                "$set": {
-                    "status": update.status,
-                    "updated_at": datetime.utcnow(),
-                    "approved_by": current_user.email if update.status == LeaveStatus.APPROVED else leave.get("approved_by")
-                }
-            },
-            return_document=True
-        )
-        if not updated:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-
-        await leave_collection.update_many(
-            {"employee_id": updated["employee_id"]},
-            {
-                "$set": {
-                    "leave_taken": leave_taken,
-                    "remaining_leaves": remaining_leaves
-                }
-            }
-        )
-
-        updated["_id"] = str(updated["_id"])
-        return updated
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid leave ID format"
-        )
 
 @router.get("/my-requests", response_model=List[LeaveResponse])
 async def get_my_leave_requests(

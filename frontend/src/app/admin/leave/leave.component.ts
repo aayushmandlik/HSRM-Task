@@ -1,9 +1,9 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LeaveResponse, LeaveUpdateStatus } from 'src/app/core/interfaces/leave.interface';
+import { LeaveService } from 'src/app/core/services/leave.service';
 import { AuthService } from 'src/app/core/services/auth.service';
-import { LeaveCreate, LeaveResponse, LeaveUpdateStatus } from 'src/app/core/interfaces/leave.interface';
 
 @Component({
   selector: 'app-leave',
@@ -29,7 +29,7 @@ export class LeaveComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private leaveService: LeaveService,
     private authService: AuthService
   ) {
     this.leaveForm = this.fb.group({
@@ -44,49 +44,41 @@ export class LeaveComponent implements OnInit {
   }
 
   loadPendingLeaveRequests() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<LeaveResponse[]>(`http://localhost:8000/admin/leave/pendingrequests`, { headers }).subscribe({
+    this.leaveService.getPendingLeaveRequests().subscribe({
       next: (data) => {
         this.pendingLeaves = data;
         console.log('Loaded Pending Leave Requests with IDs:', data.map(leave => ({ _id: leave._id, employee_name: leave.employee_name })));
       },
-      error: (err) => console.error('Error loading pending leave requests:', err)
+      error: (err) => {
+        console.error('Error loading pending leave requests:', err.message);
+        this.errorMessage = `Error loading pending leave requests: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
   loadApprovedRejectedLeaveRequests() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<LeaveResponse[]>(`http://localhost:8000/admin/leave/leaverequests`, { headers }).subscribe({
+    this.leaveService.getApprovedRejectedLeaveRequests().subscribe({
       next: (data) => {
         this.approvedRejectedLeaves = data.filter(leave => leave.status !== 'pending');
         this.filteredApprovedRejectedLeaves = [...this.approvedRejectedLeaves];
         console.log('Loaded Approved/Rejected Leave Requests:', this.approvedRejectedLeaves);
       },
-      error: (err) => console.error('Error loading leave requests:', err)
+      error: (err) => {
+        console.error('Error loading approved/rejected leave requests:', err.message);
+        this.errorMessage = `Error loading approved/rejected leave requests: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
   openModal(leaveId: string) {
-    console.log('Attempting to open modal with leaveId:', leaveId); 
     if (!leaveId) {
       console.error('Invalid leaveId passed to openModal:', leaveId);
+      this.errorMessage = 'Error: Invalid leave ID';
       return;
     }
     this.selectedLeaveId = leaveId;
     this.isModalOpen = true;
-    this.leaveForm.reset(); 
+    this.leaveForm.reset();
     this.successMessage = null;
     this.errorMessage = null;
   }
@@ -100,28 +92,13 @@ export class LeaveComponent implements OnInit {
   }
 
   updateLeaveStatus() {
-    console.log('Form value:', this.leaveForm.value); 
-    console.log('Selected Leave ID:', this.selectedLeaveId); 
     if (this.leaveForm.valid && this.selectedLeaveId) {
       const leaveUpdate: LeaveUpdateStatus = this.leaveForm.value;
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-      console.log('Sending update request:', { leaveId: this.selectedLeaveId, data: leaveUpdate });
-
-      this.http.put<LeaveResponse>(`http://localhost:8000/admin/leave/${this.selectedLeaveId}/status`, leaveUpdate, { headers }).subscribe({
+      this.leaveService.updateLeaveStatus(this.selectedLeaveId, leaveUpdate).subscribe({
         next: (response) => {
           console.log('Leave status updated successfully:', response);
           this.successMessage = 'Leave status updated successfully!';
-          
-          // Remove from pending if it was there
           this.pendingLeaves = this.pendingLeaves.filter(leave => leave._id !== this.selectedLeaveId);
-          
-          // Add or update in approvedRejectedLeaves
           if (response.status !== 'pending') {
             const existingIndex = this.approvedRejectedLeaves.findIndex(leave => leave._id === response._id);
             if (existingIndex !== -1) {
@@ -131,24 +108,23 @@ export class LeaveComponent implements OnInit {
             }
             this.applyFilters();
           }
-
           this.loadPendingLeaveRequests();
-          this.loadApprovedRejectedLeaveRequests(); 
+          this.loadApprovedRejectedLeaveRequests();
           this.closeModal();
         },
         error: (err) => {
-          console.error('Error updating leave status:', err);
-          this.errorMessage = err.error?.detail || 'Error updating leave status';
+          console.error('Error updating leave status:', err.message);
+          this.errorMessage = `Error updating leave status: ${err.message || 'Unknown error'}`;
         }
       });
     } else {
-      console.log('Form is invalid or no leave selected:', this.leaveForm.value, this.selectedLeaveId); 
       if (!this.leaveForm.valid) {
         console.log('Form errors:', this.leaveForm.errors);
-        this.leaveForm.markAllAsTouched(); 
+        this.leaveForm.markAllAsTouched();
       }
       if (!this.selectedLeaveId) {
-        console.error('No leave selected - this should not happen if openModal worked');
+        console.error('No leave selected');
+        this.errorMessage = 'Error: No leave selected';
       }
     }
   }
@@ -181,6 +157,10 @@ export class LeaveComponent implements OnInit {
 
   get approvedLeavesCount(): number {
     return this.approvedRejectedLeaves.filter(leave => leave.status === 'approved').length;
+  }
+
+  get rejectedLeavesCount(): number {
+    return this.approvedRejectedLeaves.filter(leave => leave.status === "rejected").length;
   }
 
   get totalLeavesTaken(): number {

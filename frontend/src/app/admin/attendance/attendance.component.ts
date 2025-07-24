@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/core/services/auth.service';
+import { FormsModule } from '@angular/forms';
 import { Attendance } from 'src/app/core/interfaces/attendance.interface';
+import { AttendanceService } from 'src/app/core/services/attendance.service';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-attendance',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './attendance.component.html',
   styleUrls: ['./attendance.component.css']
 })
@@ -17,28 +17,22 @@ export class AttendanceComponent implements OnInit {
   filterDate: string = new Date().toISOString().split('T')[0]; // Default to today
   errorMessage: string | null = null;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private attendanceService: AttendanceService, private authService: AuthService) {}
 
   ngOnInit() {
     this.loadAttendanceLogs();
   }
 
   loadAttendanceLogs() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<{ logs: Attendance[] }>(`http://localhost:8000/admin/attendance/logs?date=${this.filterDate}`, { headers }).subscribe({
+    this.attendanceService.getAttendanceLogs(this.filterDate).subscribe({
       next: (data) => {
-        this.attendanceLogs = data.logs;
+        this.attendanceLogs = data;
         console.log('Loaded Attendance Logs:', this.attendanceLogs);
+        this.errorMessage = null;
       },
       error: (err) => {
-        console.error('Error loading attendance logs:', err);
-        this.errorMessage = err.error?.detail || 'Error loading attendance logs';
+        console.error('Error loading attendance logs:', err.message);
+        this.errorMessage = `Error loading attendance logs: ${err.message || 'Unknown error'}`;
       }
     });
   }
@@ -47,5 +41,17 @@ export class AttendanceComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     this.filterDate = target.value;
     this.loadAttendanceLogs();
+  }
+
+  get getTotalEmployees():number{
+    return this.attendanceLogs.length;
+  }
+
+  get presentEmployees():number{
+    return this.attendanceLogs.filter(present => present.status === "Present").length;
+  }
+
+  get absentEmployees():number{
+    return this.attendanceLogs.filter(absent => absent.status === "Absent").length;
   }
 }

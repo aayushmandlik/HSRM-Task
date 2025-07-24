@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/core/services/auth.service';
 import { TaskOut, TaskComment } from 'src/app/core/interfaces/task.interface';
+import { TaskService } from 'src/app/core/services/task.service';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-employee-task',
@@ -14,16 +14,16 @@ import { TaskOut, TaskComment } from 'src/app/core/interfaces/task.interface';
 })
 export class EmployeeTaskComponent implements OnInit {
   tasks: TaskOut[] = [];
-  filteredTasks: TaskOut[] = []; // Will hold all tasks initially
+  filteredTasks: TaskOut[] = [];
   isModalOpen = false;
   selectedTaskId: string | null = null;
   commentForm: FormGroup;
   errorMessage: string | null = null;
-  filterDate: string = ''; // Empty string to disable date filter initially
+  filterDate: string = '';
   searchQuery: string = '';
 
   constructor(
-    private http: HttpClient,
+    private taskService: TaskService,
     private authService: AuthService,
     private fb: FormBuilder
   ) {
@@ -38,20 +38,16 @@ export class EmployeeTaskComponent implements OnInit {
   }
 
   loadMyTasks() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<TaskOut[]>(`http://localhost:8000/tasks/my`, { headers }).subscribe({
+    this.taskService.getMyTasks().subscribe({
       next: (data) => {
         this.tasks = data;
-        this.filteredTasks = [...this.tasks]; // Copy all tasks initially
+        this.filteredTasks = [...this.tasks];
         console.log('Loaded My Tasks:', data);
       },
-      error: (err) => console.error('Error loading my tasks:', err)
+      error: (err) => {
+        console.error('Error loading my tasks:', err.message);
+        this.errorMessage = `Error loading tasks: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
@@ -64,7 +60,7 @@ export class EmployeeTaskComponent implements OnInit {
           if (!isNaN(dateObj.getTime())) {
             taskDate = dateObj.toISOString().split('T')[0];
           } else {
-            console.warn(`Invalid date for task ${task.id}: ${task.due_date}`);
+            console.warn(`Invalid date for task ${task.id}: ${task.created_at}`);
           }
         } catch (error) {
           console.warn(`Error parsing date for task ${task.id}: ${error}`);
@@ -81,21 +77,14 @@ export class EmployeeTaskComponent implements OnInit {
     const selectElement = event.target as HTMLSelectElement;
     const newStatus = selectElement.value;
     if (newStatus) {
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-      this.http.patch<TaskOut>(`http://localhost:8000/tasks/${taskId}/status`, { status: newStatus }, { headers }).subscribe({
+      this.taskService.updateTaskStatus(taskId, newStatus).subscribe({
         next: (response) => {
           console.log('Task status updated:', response);
           this.loadMyTasks();
         },
         error: (err) => {
-          console.error('Error updating task status:', err);
-          this.errorMessage = err.error.detail || 'Error updating task status';
+          console.error('Error updating task status:', err.message);
+          this.errorMessage = `Error updating task status: ${err.message || 'Unknown error'}`;
         }
       });
     }
@@ -117,22 +106,15 @@ export class EmployeeTaskComponent implements OnInit {
   onSubmitComment() {
     if (this.commentForm.valid && this.selectedTaskId) {
       const commentData: TaskComment = this.commentForm.value;
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-      this.http.post<TaskOut>(`http://localhost:8000/tasks/${this.selectedTaskId}/comment`, commentData, { headers }).subscribe({
+      this.taskService.addComment(this.selectedTaskId, commentData).subscribe({
         next: (response) => {
           console.log('Comment added:', response);
           this.closeCommentModal();
           this.loadMyTasks();
         },
         error: (err) => {
-          console.error('Error adding comment:', err);
-          this.errorMessage = err.error.detail || 'Error adding comment';
+          console.error('Error adding comment:', err.message);
+          this.errorMessage = `Error adding comment: ${err.message || 'Unknown error'}`;
         }
       });
     }
@@ -148,5 +130,18 @@ export class EmployeeTaskComponent implements OnInit {
     const target = event.target as HTMLInputElement;
     this.searchQuery = target.value || '';
     this.applyFilters();
+  }
+
+  getPendingTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Pending').length;
+  }
+
+  getCompletedTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Completed').length;
+  }
+
+  getOverdueTasksCount(): number {
+    const now = new Date();
+    return this.tasks.filter(t => t.due_date && new Date(t.due_date) < now).length;
   }
 }

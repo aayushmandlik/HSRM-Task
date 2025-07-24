@@ -3,8 +3,12 @@ import { CommonModule } from '@angular/common';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { LeaveResponse } from 'src/app/core/interfaces/leave.interface';
-import { Chart } from 'chart.js/auto';
+import { Attendance } from 'src/app/core/interfaces/attendance.interface';
 import { FormsModule } from '@angular/forms';
+import { LeaveService } from 'src/app/core/services/leave.service';
+import { AttendanceService } from 'src/app/core/services/attendance.service';
+import { TaskOut } from 'src/app/core/interfaces/task.interface';
+import { TaskService } from 'src/app/core/services/task.service';
 
 @Component({
   selector: 'app-employee-dashboard-content',
@@ -14,48 +18,77 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./employee-dashboard-content.component.css']
 })
 export class EmployeeDashboardContentComponent {
-    remainingLeaves: LeaveResponse[] = [];
+    leaves: LeaveResponse[] = [];
+    attendanceLogs: Attendance[] = []
     employeeName: string | null = null;
+    errorMessage: string | null = null;
     thoughtForTheDay: string = '';
     todoList: string[] = [];
     newTodo: string = '';
+    tasks: TaskOut[] = []
     
   
-    constructor(private http: HttpClient, private authService: AuthService) {}
+    constructor(private http: HttpClient, private authService: AuthService, private leaveService: LeaveService, private attendanceService: AttendanceService, private taskService: TaskService) {}
   
     ngOnInit() {
-      this.loadRemainingLeaveRequests();
+      this.loadMyLeaveRequests();
+      this.loadAttendanceLogs();
       this.employeeName = this.authService.getUserName();
       this.generateThoughtForTheDay();
       this.loadTodoList();
+      this.loadMyTasks();
     }
     
-    loadRemainingLeaveRequests() {
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-  
-      this.http.get<LeaveResponse[]>(`http://localhost:8000/Emp_leave/my-requests`, { headers }).subscribe({
+    loadMyLeaveRequests() {
+      this.leaveService.getMyLeaveRequests().subscribe({
         next: (data) => {
-          console.log(data)
-          this.remainingLeaves = data;
+          this.leaves = data;
+          console.log('Loaded My Leave Requests:', data);
         },
-        error: (err) => console.error('Error loading pending leave requests:', err)
+        error: (err) => {
+          console.error('Error loading my leave requests:', err.message);
+          this.errorMessage = `Error loading my leave requests: ${err.message || 'Unknown error'}`;
+        }
       });
     }
+
+  
+  loadAttendanceLogs() {
+    this.attendanceService.getMyAttendanceLogs().subscribe({
+      next: (data) => {
+        this.attendanceLogs = data;
+        console.log('Loaded My Attendance Logs:', this.attendanceLogs);
+        this.errorMessage = null;
+      },
+      error: (err) => {
+        console.error('Error loading my attendance logs:', err.message);
+        this.errorMessage = `Error loading my attendance logs: ${err.message || 'Unknown error'}`;
+      }
+    });
+  }
+
+  loadMyTasks() {
+    this.taskService.getMyTasks().subscribe({
+      next: (data) => {
+        this.tasks = data;
+        console.log('Loaded My Tasks:', data);
+      },
+      error: (err) => {
+        console.error('Error loading my tasks:', err.message);
+        this.errorMessage = `Error loading tasks: ${err.message || 'Unknown error'}`;
+      }
+    });
+  }
   
   get totalLeavesTaken(): number {
-    return this.remainingLeaves
-      .filter(leave => leave.status === 'approved') // Only count approved leaves
-      .reduce((sum, leave) => sum + leave.days, 0); // Sum the days of approved leaves
+    return this.leaves
+      .filter(leave => leave.status === 'approved') 
+      .reduce((sum, leave) => sum + leave.days, 0); 
   }
 
   get remainingLeavesCount(): number {
-    const initialLeaves = 20; // Assuming initial leave balance is 20 days
-    return initialLeaves - this.totalLeavesTaken; // Remaining = Initial - Total Taken
+    const initialLeaves = 20;
+    return initialLeaves - this.totalLeavesTaken; 
   }
   
     generateThoughtForTheDay() {
@@ -100,5 +133,17 @@ export class EmployeeDashboardContentComponent {
       const userId = currentUser ? currentUser.user_id : 'default';
       localStorage.setItem(`todos_${userId}`, JSON.stringify(this.todoList));
     }
+
+  getPendingTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Pending').length;
+  }
+
+  getCompletedTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Completed').length;
+  }
+
+  getInprogressTaskCount(): number{
+    return this.tasks.filter(t => t.status === "InProgress").length;
+  }
   
 }

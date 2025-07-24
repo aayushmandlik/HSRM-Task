@@ -44,7 +44,7 @@ async def get_all_tasks(current_admin: dict = Depends(require_admin)):
             id=str(t["_id"]),
             title=t.get("title", ""),
             description=t.get("description", ""),
-            assigned_to=await get_names_from_user_ids(t.get("assigned_to", [])),  # Convert user_ids to names
+            assigned_to=await get_names_from_user_ids(t.get("assigned_to", [])),  
             assigned_by=t.get("assigned_by", ""),
             status=t.get("status", "Pending"),
             priority=t.get("priority", "Normal"),
@@ -76,7 +76,7 @@ async def update_task(task_id: str, task: TaskUpdate, current_admin: dict = Depe
             emp = await employee_collection.find_one({"name": name.strip()})
             if not emp:
                 raise HTTPException(status_code=404, detail=f"Employee not found for name: {name}")
-            assigned_user_ids.append(emp["user_id"])  # Store user_id
+            assigned_user_ids.append(emp["user_id"])  
         update_data["assigned_to"] = assigned_user_ids
     if task.assigned_by is not None:
         update_data["assigned_by"] = task.assigned_by
@@ -100,14 +100,14 @@ async def update_task(task_id: str, task: TaskUpdate, current_admin: dict = Depe
 
 @router.get("/my", response_model=List[TaskOut])
 async def get_my_tasks(current_user: dict = Depends(get_current_user)):
-    user_id = current_user["user_id"]  # Access as attribute if TokenPayload, else current_user["user_id"]
+    user_id = current_user["user_id"] 
     tasks = await task_collection.find({"assigned_to": {"$in": [user_id]}}).to_list(length=100)
     return [
         TaskOut(
             id=str(t["_id"]),
             title=t.get("title", ""),
             description=t.get("description", ""),
-            assigned_to=await get_names_from_user_ids(t.get("assigned_to", [])),  # Convert user_ids to names
+            assigned_to=await get_names_from_user_ids(t.get("assigned_to", [])),  
             assigned_by=t.get("assigned_by", ""),
             status=t.get("status", "Pending"),
             priority=t.get("priority", "Normal"),
@@ -122,12 +122,12 @@ async def get_my_tasks(current_user: dict = Depends(get_current_user)):
 
 @router.patch("/{task_id}/status", response_model=TaskOut)
 async def update_task_status(task_id: str, update: TaskUpdateStatus, current_user: dict = Depends(get_current_user)):
-    user_id = current_user["user_id"]  # Access as attribute
+    user_id = current_user["user_id"]  
     task = await task_collection.find_one({"_id": ObjectId(task_id)})
 
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
-    if str(user_id) not in task.get("assigned_to", []):  # Match user_id with assigned_to
+    if str(user_id) not in task.get("assigned_to", []):  
         raise HTTPException(status_code=403, detail="Not allowed to update this task")
 
     updated = await task_collection.find_one_and_update(
@@ -165,7 +165,6 @@ async def delete_task(task_id: str, current_user: dict = Depends(require_admin))
         raise HTTPException(status_code=500, detail="Failed to delete task")
     return {"message": "Task deleted successfully"}
 
-# Helper function to convert user_ids to names
 async def get_names_from_user_ids(user_ids: list) -> list:
     if not user_ids:
         return []

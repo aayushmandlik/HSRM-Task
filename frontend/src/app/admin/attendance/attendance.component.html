@@ -13,6 +13,42 @@
     <input type="date" [(ngModel)]="filterDate" (change)="onDateChange($event)" class="border p-2 rounded">
   </div>
 
+  <div class="flex justify-between mt-10 gap-10">
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="https://cdn-icons-png.flaticon.com/128/6103/6103648.png"
+          alt="" class="w-12 h-12">
+        <div>
+          <p class="font-bold text-2xl text-slate-400">Total Employees</p>
+          <!-- <p>{{ getLeaveCount('Casual') }}</p> -->
+        </div>
+      </div>
+      <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{getTotalEmployees}}</div>
+    </div>
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="https://cdn-icons-png.flaticon.com/128/6103/6103648.png"
+          alt="" class="w-12 h-12">
+        <div>
+          <p class="font-bold text-2xl text-slate-400">Present Employees</p>
+          <!-- <p>{{ getLeaveCount('Medical') }}</p> -->
+        </div>
+      </div>
+      <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{presentEmployees}}</div>
+    </div>
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="https://cdn-icons-png.flaticon.com/128/6103/6103648.png"
+          alt="" class="w-12 h-12">
+        <div>
+          <p class="font-bold text-2xl text-slate-400">Absent Employees</p>
+          <!-- <p>{{ getLeaveCount('Annual') }}</p> -->
+        </div>
+      </div>
+      <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{absentEmployees}}</div>
+    </div>
+  </div>
+
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-2xl font-semibold mb-4">Attendance Logs</h3>
     <table class="w-full border-collapse">
@@ -30,10 +66,10 @@
       <tbody>
         <tr *ngFor="let log of attendanceLogs" class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
           <td class="p-3">{{ log.employee_name || 'unknown' }}</td>
-          <td class="p-3">{{ log.check_in | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.check_out | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.break_in | date:'yyyy-MM-dd HH:mm' }}</td>
-          <td class="p-3">{{ log.break_out | date:'yyyy-MM-dd HH:mm' }}</td>
+          <td class="p-3">{{ log.check_in | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.check_out | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.break_in | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.break_out | date:'HH:mm' }}</td>
           <td class="p-3">{{ log.total_hours || 'N/A' }}</td>
           <td class="p-3">{{ log.status }}</td>
         </tr>

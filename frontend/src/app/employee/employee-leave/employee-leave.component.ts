@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthService } from 'src/app/core/services/auth.service';
 import { LeaveCreate, LeaveResponse, LeaveUpdate } from 'src/app/core/interfaces/leave.interface';
+import { LeaveService } from 'src/app/core/services/leave.service';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-employee-leave',
@@ -23,7 +23,7 @@ export class EmployeeLeaveComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient,
+    private leaveService: LeaveService,
     private authService: AuthService
   ) {
     this.leaveForm = this.fb.group({
@@ -45,33 +45,22 @@ export class EmployeeLeaveComponent implements OnInit {
   }
 
   loadMyLeaveRequests() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<LeaveResponse[]>(`http://localhost:8000/Emp_leave/my-requests`, { headers }).subscribe({
+    this.leaveService.getMyLeaveRequests().subscribe({
       next: (data) => {
         this.leaves = data;
         console.log('Loaded My Leave Requests:', data);
       },
-      error: (err) => console.error('Error loading leave requests:', err)
+      error: (err) => {
+        console.error('Error loading my leave requests:', err.message);
+        this.errorMessage = `Error loading my leave requests: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
   onSubmitLeave() {
     if (this.leaveForm.valid) {
       const leaveData: LeaveCreate = this.leaveForm.value;
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-      this.http.post<LeaveResponse>(`http://localhost:8000/Emp_leave/request`, leaveData, { headers }).subscribe({
+      this.leaveService.createLeaveRequest(leaveData).subscribe({
         next: (response) => {
           console.log('Leave request submitted:', response);
           this.successMessage = 'Leave request submitted successfully!';
@@ -80,8 +69,8 @@ export class EmployeeLeaveComponent implements OnInit {
           this.closeModal();
         },
         error: (err) => {
-          console.error('Error submitting leave request:', err);
-          this.errorMessage = err.error.detail || 'Error submitting leave request';
+          console.error('Error submitting leave request:', err.message);
+          this.errorMessage = `Error submitting leave request: ${err.message || 'Unknown error'}`;
         }
       });
     }
@@ -129,17 +118,10 @@ export class EmployeeLeaveComponent implements OnInit {
     this.errorMessage = null;
   }
 
-    onSubmitUpdate() {
+  onSubmitUpdate() {
     if (this.updateForm.valid && this.selectedLeaveId) {
       const updateData: LeaveUpdate = this.updateForm.value;
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-      this.http.patch<LeaveResponse>(`http://localhost:8000/Emp_leave/${this.selectedLeaveId}`, updateData, { headers }).subscribe({
+      this.leaveService.updateLeaveRequest(this.selectedLeaveId, updateData).subscribe({
         next: (response) => {
           console.log('Leave updated:', response);
           this.successMessage = 'Leave updated successfully!';
@@ -147,31 +129,24 @@ export class EmployeeLeaveComponent implements OnInit {
           this.closeModal();
         },
         error: (err) => {
-          console.error('Error updating leave:', err);
-          this.errorMessage = err.error.detail || 'Error updating leave';
+          console.error('Error updating leave:', err.message);
+          this.errorMessage = `Error updating leave: ${err.message || 'Unknown error'}`;
         }
       });
     }
   }
 
   deleteLeave(leaveId: string) {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
     if (confirm('Are you sure you want to delete this leave request?')) {
-      this.http.delete(`http://localhost:8000/Emp_leave/${leaveId}`, { headers }).subscribe({
+      this.leaveService.deleteLeaveRequest(leaveId).subscribe({
         next: () => {
           console.log('Leave deleted:', leaveId);
           this.successMessage = 'Leave deleted successfully!';
           this.loadMyLeaveRequests();
         },
         error: (err) => {
-          console.error('Error deleting leave:', err);
-          this.errorMessage = err.error.detail || 'Error deleting leave';
+          console.error('Error deleting leave:', err.message);
+          this.errorMessage = `Error deleting leave: ${err.message || 'Unknown error'}`;
         }
       });
     }
@@ -187,12 +162,12 @@ export class EmployeeLeaveComponent implements OnInit {
 
   get totalLeavesTaken(): number {
     return this.leaves
-      .filter(leave => leave.status === 'approved') // Only count approved leaves
-      .reduce((sum, leave) => sum + leave.days, 0); // Sum the days of approved leaves
+      .filter(leave => leave.status === 'approved')
+      .reduce((sum, leave) => sum + leave.days, 0);
   }
 
   get remainingLeaves(): number {
-    const initialLeaves = 20; // Assuming initial leave balance is 20 days
-    return initialLeaves - this.totalLeavesTaken; // Remaining = Initial - Total Taken
+    const initialLeaves = 20;
+    return initialLeaves - this.totalLeavesTaken;
   }
 }

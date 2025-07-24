@@ -31,7 +31,6 @@ import { EmployeesComponent } from './admin/employees/employees.component';
 import { TaskComponent } from './admin/task/task.component';
 import { LeaveComponent } from './admin/leave/leave.component';
 import { AttendanceComponent } from './admin/attendance/attendance.component';
-import { PayrollComponent } from './admin/payroll/payroll.component';
 import { AdminDashboardContentComponent } from './admin/admin-dashboard-content/admin-dashboard-content.component';
 import { EmployeeDashboardContentComponent } from './employee/employee-dashboard-content/employee-dashboard-content.component';
 import { EmployeeTaskComponent } from './employee/employee-task/employee-task.component';
@@ -65,7 +64,6 @@ export const routes: Routes = [
       { path: 'task', component: TaskComponent, data: { title: 'Task' } },
       { path: 'leave', component: LeaveComponent, data: { title: 'Leave' } },
       { path: 'attendance', component: AttendanceComponent, data: { title: 'Attendance' } },
-      { path: 'payroll', component: PayrollComponent, data: { title: 'Payroll' } }
     ]
   },
   { path: '', redirectTo: '/auth', pathMatch: 'full' },

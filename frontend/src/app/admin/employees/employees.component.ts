@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { EmployeeCreate, EmployeeUpdate } from 'src/app/core/interfaces/employee.interface';
+import { EmployeeService } from 'src/app/core/services/employee.service';
 import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-employees',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './employees.component.html',
   styleUrls: ['./employees.component.css']
 })
@@ -18,13 +18,17 @@ export class EmployeesComponent implements OnInit {
   employees: any[] = [];
   filteredEmployees: any[] = [];
   ttlempicon: string = '';
-  selectedEmployeeId: string | null = null; 
+  selectedEmployeeId: string | null = null;
   errorMessage: string | null = null;
   searchTerm: string = '';
   statusFilter: string = '';
   departmentFilter: string = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder,
+    private employeeService: EmployeeService,
+    private authService: AuthService
+  ) {
     this.employeeForm = this.fb.group({
       emp_code: ['', [Validators.required]],
       name: ['', [Validators.required]],
@@ -40,7 +44,7 @@ export class EmployeesComponent implements OnInit {
       location: ['', [Validators.required]],
       reporting_manager_id: [''],
       reporting_manager: [''],
-      status: [''] 
+      status: ['']
     });
   }
 
@@ -92,37 +96,29 @@ export class EmployeesComponent implements OnInit {
     if (this.employeeForm.valid) {
       const employeeData: EmployeeCreate = this.employeeForm.value;
       console.log('Submitting Data:', employeeData);
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
       if (this.selectedEmployeeId) {
-        this.http.put(`http://localhost:8000/employee/${this.selectedEmployeeId}`, employeeData, { headers }).subscribe({
+        this.employeeService.updateEmployee(this.selectedEmployeeId, employeeData).subscribe({
           next: (response) => {
             console.log('Employee updated:', response);
             this.closeModal();
             this.loadEmployees();
           },
           error: (err) => {
-            console.error('Error updating employee:', err);
-            if (err.error) console.log('Server Error Details:', err.error);
-            this.errorMessage = err.error.detail || 'Error updating employee';
+            console.error('Error updating employee:', err.message);
+            this.errorMessage = `Error updating employee: ${err.message || 'Unknown error'}`;
           }
         });
       } else {
-        this.http.post('http://localhost:8000/employee/create', employeeData, { headers }).subscribe({
+        this.employeeService.createEmployee(employeeData).subscribe({
           next: (response) => {
             console.log('Employee added:', response);
             this.closeModal();
             this.loadEmployees();
           },
           error: (err) => {
-            console.error('Error adding employee:', err);
-            if (err.error) console.log('Server Error Details:', err.error);
-            this.errorMessage = err.error.detail || 'Error adding employee';
+            console.error('Error adding employee:', err.message);
+            this.errorMessage = `Error adding employee: ${err.message || 'Unknown error'}`;
           }
         });
       }
@@ -130,37 +126,29 @@ export class EmployeesComponent implements OnInit {
   }
 
   loadEmployees() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in as an admin.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<any[]>('http://localhost:8000/employee/getall', { headers }).subscribe({
+    this.employeeService.getAllEmployees().subscribe({
       next: (data) => {
         this.employees = data;
         this.filteredEmployees = [...this.employees];
         console.log('Loaded Employees:', data);
       },
-      error: (err) => console.error('Error loading employees:', err)
+      error: (err) => {
+        console.error('Error loading employees:', err.message);
+        this.errorMessage = `Error loading employees: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
   deleteEmployee(empCode: string) {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in as an admin.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.delete(`http://localhost:8000/employee/${empCode}`, { headers }).subscribe({
+    this.employeeService.deleteEmployee(empCode).subscribe({
       next: (response) => {
         console.log('Employee deleted:', response);
         this.loadEmployees();
       },
-      error: (err) => console.error('Error deleting employee:', err)
+      error: (err) => {
+        console.error('Error deleting employee:', err.message);
+        this.errorMessage = `Error deleting employee: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
@@ -200,7 +188,7 @@ export class EmployeesComponent implements OnInit {
   }
 
   get getNewJoinersCount(): number {
-    const oneMonthAgo = new Date('2025-06-22'); 
+    const oneMonthAgo = new Date('2025-06-22');
     return this.employees.filter(employee => {
       const joinDate = new Date(employee.date_of_joining);
       return joinDate >= oneMonthAgo && joinDate <= new Date();

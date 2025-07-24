@@ -1,14 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule, HttpHeaders } from '@angular/common/http';
 import { TaskCreate, TaskOut, TaskUpdate } from 'src/app/core/interfaces/task.interface';
+import { TaskService } from 'src/app/core/services/task.service';
 import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-tasks',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './task.component.html',
   styleUrls: ['./task.component.css']
 })
@@ -23,18 +23,21 @@ export class TaskComponent implements OnInit {
   searchTerm: string = '';
   filterDate: string = '';
 
-  constructor(private fb: FormBuilder, private http: HttpClient, private authService: AuthService) {
+  constructor(
+    private fb: FormBuilder,
+    private taskService: TaskService,
+    private authService: AuthService
+  ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      assigned_to_emails: [''], 
+      assigned_to_emails: [''],
       assigned_by: ['', [Validators.required]],
-      priority: ['Normal'],
+      priority: ['Normal', [Validators.required]],
       due_date: [''],
       status: ['', [Validators.required]],
       project: ['', [Validators.required]]
     });
-    
   }
 
   ngOnInit() {
@@ -54,7 +57,7 @@ export class TaskComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title || '',
           description: task.description || '',
-          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '', 
+          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '',
           assigned_by: task.assigned_by || '',
           priority: task.priority || 'Normal',
           due_date: task.due_date || '',
@@ -76,42 +79,52 @@ export class TaskComponent implements OnInit {
 
   onSubmit() {
     if (this.taskForm.valid) {
-      let taskData: TaskCreate | TaskUpdate = { ...this.taskForm.value }; 
-      if (typeof taskData.assigned_to_emails === 'string' && taskData.assigned_to_emails.trim()) {
-        taskData.assigned_to_emails = taskData.assigned_to_emails.split(',').map((email: string) => email.trim());
-      } else if (!Array.isArray(taskData.assigned_to_emails)) {
-        taskData.assigned_to_emails = [];
-      }
+      const formValue = this.taskForm.value;
+     
+      const assignedToEmails = typeof formValue.assigned_to_emails === 'string' && formValue.assigned_to_emails.trim()
+        ? formValue.assigned_to_emails.split(',').map((email: string) => email.trim())
+        : [];
+
+     
+      const taskData = {
+        title: formValue.title,
+        description: formValue.description,
+        assigned_to_emails: assignedToEmails,
+        assigned_by: formValue.assigned_by,
+        priority: formValue.priority,
+        due_date: formValue.due_date || '',
+        status: formValue.status,
+        project: formValue.project
+      };
+
       console.log('Submitting Data:', taskData);
-      const token = this.authService.getToken();
-      if (!token) {
-        console.error('No token available. Please log in.');
-        return;
-      }
-      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
       if (this.selectedTaskId) {
-        this.http.put(`http://localhost:8000/tasks/${this.selectedTaskId}`, taskData, { headers }).subscribe({
+       
+        const updateData: TaskUpdate = taskData;
+        this.taskService.updateTask(this.selectedTaskId, updateData).subscribe({
           next: (response) => {
             console.log('Task updated:', response);
             this.closeModal();
             this.loadTasks();
           },
           error: (err) => {
-            console.error('Error updating task:', err);
-            this.errorMessage = err.error.detail || 'Error updating task';
+            console.error('Error updating task:', err.message);
+            this.errorMessage = `Error updating task: ${err.message || 'Unknown error'}`;
           }
         });
       } else {
-        this.http.post('http://localhost:8000/tasks/', taskData, { headers }).subscribe({
+      
+        const createData: TaskCreate = taskData;
+        this.taskService.createTask(createData).subscribe({
           next: (response) => {
             console.log('Task added:', response);
             this.closeModal();
             this.loadTasks();
           },
           error: (err) => {
-            console.error('Error adding task:', err);
-            this.errorMessage = err.error.detail || 'Error adding task';
+            console.error('Error adding task:', err.message);
+            this.errorMessage = `Error adding task: ${err.message || 'Unknown error'}`;
           }
         });
       }
@@ -119,54 +132,44 @@ export class TaskComponent implements OnInit {
   }
 
   loadTasks() {
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in as an admin.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.get<TaskOut[]>('http://localhost:8000/tasks/', { headers }).subscribe({
+    this.taskService.getAllTasks().subscribe({
       next: (data) => {
         this.tasks = data;
         this.filterTasks();
         console.log('Loaded Tasks:', data);
       },
-      error: (err) => console.error('Error loading tasks:', err)
+      error: (err) => {
+        console.error('Error loading tasks:', err.message);
+        this.errorMessage = `Error loading tasks: ${err.message || 'Unknown error'}`;
+      }
     });
   }
 
   deleteTask(taskId: string) {
     if (!taskId) {
       console.error('taskId is undefined in deleteTask');
+      this.errorMessage = 'Error deleting task: Task ID is undefined';
       return;
     }
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available. Please log in as an admin.');
-      return;
-    }
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
-
-    this.http.delete(`http://localhost:8000/tasks/${taskId}`, { headers }).subscribe({
+    this.taskService.deleteTask(taskId).subscribe({
       next: (response) => {
         console.log('Task deleted:', response);
         this.loadTasks();
       },
       error: (err) => {
-        console.error('Error deleting task:', err);
-        this.errorMessage = err.error?.detail || 'Error deleting task';
+        console.error('Error deleting task:', err.message);
+        this.errorMessage = `Error deleting task: ${err.message || 'Unknown error'}`;
       }
     });
   }
 
   filterTasks() {
     this.filteredTasks = this.tasks.filter(task => {
-      const priority = task.priority || ''; // Default to empty string if undefined
+      const priority = task.priority || '';
       const dueDateStr = task.due_date ? task.due_date.toString() : '';
       const createdAtStr = task.created_at ? task.created_at.toString() : '';
 
-      const matchesSearch = !this.searchTerm || 
+      const matchesSearch = !this.searchTerm ||
         task.title.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         task.description.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
         task.assigned_to.join(', ').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
@@ -177,7 +180,7 @@ export class TaskComponent implements OnInit {
         dueDateStr.includes(this.searchTerm) ||
         createdAtStr.includes(this.searchTerm);
 
-      const matchesDate = !this.filterDate || 
+      const matchesDate = !this.filterDate ||
         createdAtStr.startsWith(this.filterDate);
 
       return matchesSearch && matchesDate;
@@ -194,7 +197,6 @@ export class TaskComponent implements OnInit {
     this.filterTasks();
   }
 
-  // New methods to compute task counts
   getPendingTasksCount(): number {
     return this.tasks.filter(t => t.status === 'Pending').length;
   }

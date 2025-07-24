@@ -14,39 +14,40 @@
       <button (click)="openModal()" class="bg-orange-500 text-white font-medium p-3 rounded-xl">Add Leave</button>
     </div>
   </div>
-  <div class="flex justify-between mt-10 gap-10">
+  
+    <div class="flex justify-between mt-10 gap-10">
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="assets/ttlempicon.png"
-          alt="" class="w-12 h-12 rounded-full">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
+          alt="" class="w-12 h-12">
         <div>
-          <p class="font-bold text-xs text-slate-400">Total Leave Requests</p>
-          <p>{{ leaves.length }}</p>
+          <p class="font-bold text-2xl text-slate-400">Pending Leaves</p>
+          <!-- <p>{{ getLeaveCount('Casual') }}</p> -->
         </div>
       </div>
-      <div class="flex text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{pendingLeavesCount}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="assets/ttlempicon.png"
-          alt="" class="w-12 h-12 rounded-full">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
+          alt="" class="w-12 h-12">
         <div>
-          <p class="font-bold text-xs text-slate-400">Pending Leave Requests</p>
-          <p>{{ pendingLeavesCount }}</p>
+          <p class="font-bold text-2xl text-slate-400">Total Leaves Taken</p>
+          <!-- <p>{{ getLeaveCount('Medical') }}</p> -->
         </div>
       </div>
-      <div class="text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{totalLeavesTaken}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="assets/ttlempicon.png"
-          alt="" class="w-12 h-12 rounded-full">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
+          alt="" class="w-12 h-12">
         <div>
-          <p class="font-bold text-xs text-slate-400">Approved Leave Requests</p>
-          <p>{{ approvedLeavesCount }}</p>
+          <p class="font-bold text-2xl text-slate-400">Remaining Leaves</p>
+          <!-- <p>{{ getLeaveCount('Annual') }}</p> -->
         </div>
       </div>
-      <div class="text-xs bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">+19%</div>
+      <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{remainingLeaves}}</div>
     </div>
   </div>
 
@@ -156,8 +157,6 @@
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <div class="flex gap-2">
         <h3 class="text-2xl font-semibold mb-4">All Leave Requests</h3>
-        <p class="mt-1.5 text-red-500 font-semibold text-xs bg-red-200 rounded-md px-3 h-6 items-center pt-1">Total Leaves Taken: {{totalLeavesTaken}} </p>
-        <p class="mt-1.5 text-slate-500 font-semibold text-xs bg-slate-200 rounded-md px-3 h-6 items-center pt-1">Remaining Leaves: {{remainingLeaves}}</p>
     </div>
     <table class="w-full">
       <thead>

@@ -73,7 +73,7 @@ export class AuthService {
 
   getToken(): string | null {
     const user = this.getCurrentUser();
-    return user ? user.access_token : null; // Match the TokenResponse structure
+    return user ? user.access_token : null; 
   }
 
   logout(): void {
