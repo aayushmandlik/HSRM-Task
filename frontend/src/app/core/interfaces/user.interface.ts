@@ -29,3 +29,10 @@ export interface TokenResponse {
   name: string;
   user_id: string;
 }
+
+export interface TokenPayload {
+  user_id: string
+  name: string,
+  email: string,
+  role: string
+}

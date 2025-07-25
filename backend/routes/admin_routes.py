@@ -89,3 +89,30 @@ async def get_all_users(current_admin: TokenPayload = Depends(require_admin)):
         }
         users.append(user_data)
     return users
+
+@router.get("/getallregistereduseradmin", response_model=List[TokenPayload])
+async def get_all_admins(current_admin: TokenPayload = Depends(require_admin)):
+    admin_cursor = admins_collection.find()
+    user_cursor = users_collection.find()
+    registered = []
+
+    async for user in user_cursor:
+        user_data = {
+            "user_id": str(user["_id"]), 
+            "email": user.get("email"),
+            "name": user.get("name"),
+            "role": user.get("role", "user")  
+        }
+        registered.append(user_data)
+
+    async for admin in admin_cursor:
+        admin_data = {
+            "user_id": str(admin["_id"]),
+            "email": admin.get("email"),
+            "name": admin.get("name"),
+            "role": admin.get("role","admin")
+        }
+        registered.append(admin_data)
+
+    
+    return registered

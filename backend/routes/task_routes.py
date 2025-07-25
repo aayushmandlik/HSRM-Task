@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, APIRouter
 from databases.database import task_collection, employee_collection
-from schemas.task_schema import TaskCreate, TaskUpdate, TaskOut, TaskComment, TaskUpdateStatus
-from core.security import require_admin, get_current_user, require_admin_or_user
+from schemas.task_schema import TaskCreate, TaskUpdate, TaskOut, TaskUpdateStatus
+from core.security import require_admin, get_current_user
 from datetime import datetime
 from bson import ObjectId
 from typing import List
@@ -136,22 +136,6 @@ async def update_task_status(task_id: str, update: TaskUpdateStatus, current_use
         return_document=True
     )
     return TaskOut(id=str(updated["_id"]), **updated)
-
-@router.post("/{task_id}/comment", response_model=TaskOut)
-async def add_comment(task_id: str, comment: TaskComment, user: dict = Depends(require_admin_or_user)):
-    comment_data = {
-        "user_id": comment.user_id,
-        "message": comment.message,
-        "timestamp": datetime.utcnow()
-    }
-    result = await task_collection.find_one_and_update(
-        {"_id": ObjectId(task_id)},
-        {"$push": {"comments": comment_data}, "$set": {"updated_at": datetime.utcnow()}},
-        return_document=True
-    )
-    if not result:
-        raise HTTPException(status_code=404, detail="Task Not Found")
-    return TaskOut(id=str(result["_id"]), **result)
 
 @router.delete("/{task_id}")
 async def delete_task(task_id: str, current_user: dict = Depends(require_admin)):

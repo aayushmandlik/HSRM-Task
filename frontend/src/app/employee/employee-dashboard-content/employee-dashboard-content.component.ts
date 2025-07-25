@@ -9,6 +9,7 @@ import { LeaveService } from 'src/app/core/services/leave.service';
 import { AttendanceService } from 'src/app/core/services/attendance.service';
 import { TaskOut } from 'src/app/core/interfaces/task.interface';
 import { TaskService } from 'src/app/core/services/task.service';
+import { Chart } from 'chart.js/auto';
 
 @Component({
   selector: 'app-employee-dashboard-content',
@@ -26,7 +27,7 @@ export class EmployeeDashboardContentComponent {
     todoList: string[] = [];
     newTodo: string = '';
     tasks: TaskOut[] = []
-    
+    private chartInstance: Chart | null = null
   
     constructor(private http: HttpClient, private authService: AuthService, private leaveService: LeaveService, private attendanceService: AttendanceService, private taskService: TaskService) {}
   
@@ -37,6 +38,7 @@ export class EmployeeDashboardContentComponent {
       this.generateThoughtForTheDay();
       this.loadTodoList();
       this.loadMyTasks();
+      // this.renderChart();
     }
     
     loadMyLeaveRequests() {
@@ -71,6 +73,7 @@ export class EmployeeDashboardContentComponent {
     this.taskService.getMyTasks().subscribe({
       next: (data) => {
         this.tasks = data;
+        this.renderChart();
         console.log('Loaded My Tasks:', data);
       },
       error: (err) => {
@@ -145,5 +148,72 @@ export class EmployeeDashboardContentComponent {
   getInprogressTaskCount(): number{
     return this.tasks.filter(t => t.status === "InProgress").length;
   }
+
+  getOverview(){
+    return [
+      {'action':'Pending Tasks', "count":this.getPendingTasksCount()},
+      {'action':'Completed Tasks', "count":this.getCompletedTasksCount()},
+      {'action':'In Progress Tasks', "count":this.getInprogressTaskCount()},
+      {'action':'Leaves Taken', "count":this.totalLeavesTaken},
+      {'action':"Remaining Leaves", "count":this.remainingLeavesCount},
+      {'action':"Worked Days", "count":this.attendanceLogs.length}
+    ]
+  }
   
+  renderChart() {
+      if (this.chartInstance) {
+        this.chartInstance.destroy(); // Destroy previous chart instance
+      }
+  
+      const overviews = this.getOverview();
+      console.log(overviews)
+      const ctx = (document.getElementById('overviewChart') as HTMLCanvasElement).getContext('2d');
+      if (ctx && overviews.length > 0) {
+        this.chartInstance = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: overviews.map(o => o.action), // overviews on y-axis
+            datasets: [{
+              label: 'Overview',
+              data: overviews.map(o => o.count), // Multiply by 10 to simulate 10-100 range
+              backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#4B66FF', '#FF9F40']
+            }]
+          },
+          options: {
+            indexAxis: 'y', // Swap axes to put overviews on y-axis
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: {
+                beginAtZero: true, // Start x-axis at 0
+                title: {
+                  display: true,
+                  text: 'Count'
+                },
+                ticks: {
+                  stepSize: 1, // Integer steps
+                  precision: 0 // No decimals
+                },
+                min: 0, // Minimum value
+                max: 10 // Maximum value to match your 10-100 range
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'Overview'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true
+              }
+            }
+          }
+        });
+      } else {
+        console.warn('No overviews data available to render chart.');
+      }
+    }
 }
+

@@ -36,6 +36,7 @@ import { EmployeeDashboardContentComponent } from './employee/employee-dashboard
 import { EmployeeTaskComponent } from './employee/employee-task/employee-task.component';
 import { EmployeeLeaveComponent } from './employee/employee-leave/employee-leave.component';
 import { EmployeeAttendanceComponent } from './employee/employee-attendance/employee-attendance.component';
+import { RegisteredUsersComponent } from './admin/registered-users/registered-users.component';
 
 export const routes: Routes = [
   { path: 'auth', component: AuthComponent },
@@ -64,6 +65,7 @@ export const routes: Routes = [
       { path: 'task', component: TaskComponent, data: { title: 'Task' } },
       { path: 'leave', component: LeaveComponent, data: { title: 'Leave' } },
       { path: 'attendance', component: AttendanceComponent, data: { title: 'Attendance' } },
+      {path: 'registeredusersadmins', component: RegisteredUsersComponent, data:{title: 'Registered Users'}}
     ]
   },
   { path: '', redirectTo: '/auth', pathMatch: 'full' },

@@ -74,7 +74,7 @@ export class AuthComponent {
   onUserRegister(): void {
     if (this.userRegisterForm.valid) {
       this.authService.userRegister(this.userRegisterForm.value).subscribe({
-        next: () => this.router.navigate(['/profile']),
+        next: () =>{alert("User Registered Successfully"); this.router.navigate(['/profile/dashboard'])},
         error: (err) => this.errorMessage = err.error.detail || 'Registration failed'
       });
     }
@@ -92,7 +92,7 @@ export class AuthComponent {
   onAdminRegister(): void {
     if (this.adminRegisterForm.valid) {
       this.authService.adminRegister(this.adminRegisterForm.value).subscribe({
-        next: () => this.router.navigate(['/admin/dashboard']),
+        next: () => { alert("Admin Registered Successfully"); this.router.navigate(['/admin/dashboard'])},
         error: (err) => this.errorMessage = err.error.detail || 'Registration failed'
       });
     }

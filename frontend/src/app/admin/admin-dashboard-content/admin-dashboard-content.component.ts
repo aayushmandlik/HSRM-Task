@@ -5,6 +5,11 @@ import { AuthService } from 'src/app/core/services/auth.service';
 import { LeaveResponse } from 'src/app/core/interfaces/leave.interface';
 import { FormsModule } from '@angular/forms';
 import Chart from 'chart.js/auto';
+import { EmployeeService } from 'src/app/core/services/employee.service';
+import { AttendanceService } from 'src/app/core/services/attendance.service';
+import { TaskOut } from 'src/app/core/interfaces/task.interface';
+import { TaskService } from 'src/app/core/services/task.service';
+import { LeaveService } from 'src/app/core/services/leave.service';
 
 @Component({
   selector: 'app-admin-dashboard-content',
@@ -20,9 +25,12 @@ export class AdminDashboardContentComponent implements OnInit {
   todoList: string[] = [];
   newTodo: string = '';
   employees: any[] = [];
+  attendanceLogs: any[] = [];
+  tasks: TaskOut[] = [];
+  filterDate: string = new Date().toISOString().split('T')[0];
   private chartInstance: Chart | null = null;
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient,private employeeService:EmployeeService,private attendanceService: AttendanceService,private taskService: TaskService,private leaveService:LeaveService, private authService: AuthService) {}
 
   ngOnInit() {
     this.loadPendingLeaveRequests();
@@ -30,7 +38,10 @@ export class AdminDashboardContentComponent implements OnInit {
     this.generateThoughtForTheDay();
     this.loadTodoList();
     this.loadEmployees();
+    this.loadAttendanceLogs();
+    this.loadTasks();
     this.renderChart();
+
   }
   
   loadPendingLeaveRequests() {
@@ -41,7 +52,7 @@ export class AdminDashboardContentComponent implements OnInit {
     }
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    this.http.get<LeaveResponse[]>(`http://localhost:8000/admin/leave/pendingrequests`, { headers }).subscribe({
+    this.leaveService.getPendingLeaveRequests().subscribe({
       next: (data) => {
         this.pendingLeaves = data;
       },
@@ -52,6 +63,8 @@ export class AdminDashboardContentComponent implements OnInit {
   get pendingLeavesCount(): number {
     return this.pendingLeaves.length;
   }
+
+
 
   generateThoughtForTheDay() {
     const thoughts = [
@@ -105,26 +118,48 @@ export class AdminDashboardContentComponent implements OnInit {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     // Try a different endpoint based on your backend
-    this.http.get<any[]>('http://localhost:8000/employee/getall', { headers }) // Removed /api/ prefix
-      .subscribe({
+    this.employeeService.getAllEmployees().subscribe({
         next: (data) => {
           this.employees = data;
-          console.log('Loaded Employees:', data); // Debug: Check the data structure
+          console.log('Loaded Employees:', data); 
           this.renderChart();
         },
         error: (err) => {
           console.error('Error loading employees:', err);
-          // Fallback to mock data if API fails
-          // this.employees = [
-          //   { department: 'HR', emp_code: 'E001' },
-          //   { department: 'IT', emp_code: 'E002' },
-          //   { department: 'HR', emp_code: 'E003' },
-          //   { department: 'IT', emp_code: 'E004' },
-          //   { department: 'Finance', emp_code: 'E005' }
-          // ];
-          // this.renderChart();
         }
       });
+  }
+
+
+  loadAttendanceLogs() {
+    this.attendanceService.getAttendanceLogs(this.filterDate).subscribe({
+      next: (data) => {
+        this.attendanceLogs = data;
+        console.log('Loaded Attendance Logs:', this.attendanceLogs);
+        
+      },
+      error: (err) => {
+        console.error('Error loading attendance logs:', err.message);
+      }
+    });
+  }
+  get presentEmployees():number{
+    return this.attendanceLogs.filter(present => present.status === "Present").length;
+  }
+
+  loadTasks() {
+    this.taskService.getAllTasks().subscribe({
+      next: (data) => {
+        this.tasks = data;
+        console.log('Loaded Tasks:', data);
+      },
+      error: (err) => {
+        console.error('Error loading tasks:', err.message);
+      }
+    });
+  }
+  get getPendingTasksCount(): number {
+    return this.tasks.filter(t => t.status === 'Pending').length;
   }
 
   getEmployeesByDepartment(): { department: string, count: number }[] {
@@ -142,10 +177,11 @@ export class AdminDashboardContentComponent implements OnInit {
     }
 
     const departments = this.getEmployeesByDepartment();
+    console.log(departments)
     const ctx = (document.getElementById('departmentChart') as HTMLCanvasElement).getContext('2d');
     if (ctx && departments.length > 0) {
       this.chartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'pie',
         data: {
           labels: departments.map(d => d.department), // Departments on y-axis
           datasets: [{

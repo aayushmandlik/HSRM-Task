@@ -23,7 +23,8 @@ export class AuthService {
 
   userRegister(user: UserRegister): Observable<any> {
     return this.http.post(`${this.apiUrl}/users/register`, user).pipe(
-      tap(() => console.log('User registered'))
+      tap(() => {console.log('User registered')
+      this.router.navigate(['/profile/dashboard']);})
     );
   }
 
@@ -45,7 +46,8 @@ export class AuthService {
 
   adminRegister(admin: AdminRegister): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/register`, admin).pipe(
-      tap(() => console.log('Admin registered'))
+      tap(() => {console.log('Admin registered')
+      this.router.navigate(['/admin/dashboard']);})
     );
   }
 
