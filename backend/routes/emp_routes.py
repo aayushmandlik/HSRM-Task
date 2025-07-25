@@ -11,7 +11,6 @@ router = APIRouter(prefix="/employee", tags=['Employee'])
 
 @router.post("/create", response_model=EmployeeOut)
 async def create_employee(data: EmployeeCreate, current_admin: TokenPayload = Depends(require_admin)):
-    # Verify user exists in users_collection based on email
     user = await users_collection.find_one({"email": data.email})
     if not user:
         raise HTTPException(status_code=400, detail="User with this email does not exist")

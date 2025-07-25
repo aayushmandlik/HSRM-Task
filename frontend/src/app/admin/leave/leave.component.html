@@ -12,7 +12,6 @@
     </div>
   </div>
 
-  <!-- Cards for Total Types of Leaves Taken -->
   <div class="flex justify-between mt-10 gap-10">
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
@@ -20,7 +19,6 @@
           alt="" class="w-12 h-12">
         <div>
           <p class="font-bold text-2xl text-slate-400">Pending Leaves</p>
-          <!-- <p>{{ getLeaveCount('Casual') }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{pendingLeavesCount}}</div>
@@ -31,7 +29,6 @@
           alt="" class="w-12 h-12">
         <div>
           <p class="font-bold text-2xl text-slate-400">Approved Leaves</p>
-          <!-- <p>{{ getLeaveCount('Medical') }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{approvedLeavesCount}}</div>
@@ -42,14 +39,12 @@
           alt="" class="w-12 h-12">
         <div>
           <p class="font-bold text-2xl text-slate-400">Rejected Leaves</p>
-          <!-- <p>{{ getLeaveCount('Annual') }}</p> -->
         </div>
       </div>
       <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{rejectedLeavesCount}}</div>
     </div>
   </div>
 
-  <!-- Pending Leave Requests -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-4xl font-bold mb-4 text-slate-500">Pending Leave Requests</h3>
     <table class="w-full">
@@ -73,7 +68,7 @@
           <td class="py-2 pl-3">{{ leave.days }}</td>
           <td class="py-2 pl-3">{{ leave.reason }}</td>
           <td class="py-2 pl-3">
-            <button (click)="openModal(leave._id)" class="bg-blue-500 text-white px-3 py-1 rounded">
+            <button (click)="openModal(leave._id)" class="bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white font-medium px-3 py-1 rounded">
               Update Status
             </button>
           </td>
@@ -82,7 +77,6 @@
     </table>
   </div>
 
-  <!-- Modal for Updating Status -->
   <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
     <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mt-36 mb-10 py-5">
       <div class="flex justify-between items-center mb-5">
@@ -110,7 +104,7 @@
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded" [disabled]="leaveForm.invalid">Update</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="leaveForm.invalid">Update</button>
         </div>
       </form>
       <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>
@@ -118,7 +112,6 @@
     </div>
   </div>
 
-  <!-- Approved/Rejected Leave Requests -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-4xl font-bold mb-4 text-slate-500">Approved/Rejected Leave Requests</h3>
     <div class="flex mb-4 gap-4">

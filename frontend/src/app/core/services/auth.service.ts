@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000/api'; // Adjust to your backend URL
+  private apiUrl = 'http://localhost:8000/api'; 
   private currentUserSubject = new BehaviorSubject<TokenResponse | null>(null);
   currentUser$ = this.currentUserSubject.asObservable();
 
@@ -30,7 +30,7 @@ export class AuthService {
 
   userLogin(user: UserLogin): Observable<TokenResponse> {
     const formData = new URLSearchParams();
-    formData.set('username', user.email); // Map email to username
+    formData.set('username', user.email); 
     formData.set('password', user.password);
 
     const headers = new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' });

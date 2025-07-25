@@ -12,7 +12,7 @@
       </div>
     </div>
     <div>
-      <button (click)="openModal()" class="bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Add Employee</button>
+      <button (click)="openModal()" class="bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Add Employee</button>
     </div>
   </div>
   <div class="flex justify-between mt-10 gap-5">
@@ -54,7 +54,6 @@
     </div>
   </div>
 
-  <!-- Modal for Add/Edit Employee -->
   <div *ngIf="isModalOpen"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
     <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl mt-72 mb-10 py-5">
@@ -68,24 +67,24 @@
           <div class="flex gap-4">
             <div class="w-1/2">
               <label for="emp_code" class="block text-sm font-medium text-gray-700">Employee Code</label>
-              <input id="emp_code" formControlName="emp_code" type="text"
+              <input id="emp_code" formControlName="emp_code" type="text" placeholder="eg. e123"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
             <div class="w-1/2">
               <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
-              <input id="name" formControlName="name" type="text"
+              <input id="name" formControlName="name" type="text" placeholder="eg. Aayush"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
           </div>
           <div class="flex gap-4">
             <div class="w-1/2">
               <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-              <input id="email" formControlName="email" type="email"
+              <input id="email" formControlName="email" type="email" placeholder="eg. aayush@gmail.com"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
             <div class="w-1/2">
               <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
-              <input id="phone" formControlName="phone" type="text"
+              <input id="phone" formControlName="phone" type="text" placeholder="eg. 8291416582"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
           </div>
@@ -162,12 +161,12 @@
           <div class="flex gap-4">
             <div class="w-1/2">
               <label for="reporting_manager_id" class="block text-sm font-medium text-gray-700">Reporting Manager ID</label>
-              <input id="reporting_manager_id" formControlName="reporting_manager_id" type="text"
+              <input id="reporting_manager_id" formControlName="reporting_manager_id" type="text" placeholder="eg. m123"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
             <div class="w-1/2">
               <label for="reporting_manager" class="block text-sm font-medium text-gray-700">Reporting Manager Name</label>
-              <input id="reporting_manager" formControlName="reporting_manager" type="text"
+              <input id="reporting_manager" formControlName="reporting_manager" type="text" placeholder="eg. Rahul Rijhwani"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             </div>
           </div>
@@ -180,7 +179,7 @@
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="employeeForm.invalid">
+          <button type="submit" class="px-4 py-2 bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="employeeForm.invalid">
             {{ selectedEmployeeId ? 'Update' : 'Submit' }}
           </button>
         </div>
@@ -188,7 +187,6 @@
     </div>
   </div>
 
-  <!-- Employee List -->
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-4xl font-bold mb-4 text-slate-500">All Employees</h3>
     <div class="flex mb-4 gap-4">

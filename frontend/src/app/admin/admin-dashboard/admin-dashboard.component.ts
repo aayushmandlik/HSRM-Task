@@ -11,13 +11,8 @@ import { AuthService } from 'src/app/core/services/auth.service';
   styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent {
-  // selectedSection: string = 'dashboard';
 
   constructor(private authservice: AuthService){}
-
-  // selectSection(section: string): void {
-  //   this.selectedSection = section;
-  // }
 
   logout(): void{
     this.authservice.logout();

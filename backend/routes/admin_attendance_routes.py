@@ -17,7 +17,6 @@ async def get_all_logs(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admins only")
 
-    # Determine target date range
     query = {}
     filter_date = None
     if date:
@@ -30,7 +29,6 @@ async def get_all_logs(
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
-    # Fetch all logs for the date (if provided)
     logs = await attendance_collection.find(query).to_list(length=1000)
     log_map = {log["user_id"]: log for log in logs}  # For faster lookup
 
@@ -40,7 +38,9 @@ async def get_all_logs(
     for emp in employees:
         emp_id = emp["user_id"]
         if emp["status"] == "Active":
-            emp_name = emp.get("name", "Unknown") or emp.get("full_name", "Unknown")
+            emp_name = emp.get("name", "Unknown")
+        else:
+            continue
 
         log = log_map.get(emp_id)
 
@@ -56,11 +56,10 @@ async def get_all_logs(
             elif log.get("check_in") and not log.get("check_out"):
                 log["status"] = AttendanceStatus.PRESENT
             else:
-                log["status"] = AttendanceStatus.PRESENT  # or calculate based on logic
+                log["status"] = AttendanceStatus.PRESENT 
             log["employee_name"] = emp_name
             employee_logs.append(Attendance(**log))
         else:
-            # No log exists at all for this employee on this date
             status = AttendanceStatus.ABSENT if (filter_date and filter_date < datetime.now().date()) else AttendanceStatus.NOT_MARKED
             emp_attendance = {
                 "id": str(ObjectId()),

@@ -42,4 +42,3 @@ class LeaveUpdate(BaseModel):
     end_date: Optional[date] = None
     leave_type: Optional[str] = None
     reason: Optional[str] = None
-    # status: Optional[LeaveStatus] = None

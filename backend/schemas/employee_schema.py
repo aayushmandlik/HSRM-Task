@@ -3,7 +3,6 @@ from datetime import date
 from typing import Optional
 
 class EmployeeCreate(BaseModel):
-    # user_id: str
     emp_code: str
     name: str
     email: EmailStr

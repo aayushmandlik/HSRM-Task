@@ -1,8 +1,6 @@
-<div class="min-h-screen flex items-center justify-center bg-gray-100 bg-[url('https://png.pngtree.com/png-clipart/20230824/original/pngtree-quarantine-office-people-employee-manager-picture-image_8420225.png')] bg-cover">
-  <!-- <div class="flip-container" [ngClass]="{'flip': isFlipping}"> -->
+<div class="min-h-screen flex items-center justify-center bg-gray-100 bg-[url('assets/hrmsbg.jpg')] bg-cover">
   <div>
     <div class="flipper bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
-      <!-- Tabs -->
       <div class="flex border-b mb-6 w-96">
         <button (click)="selectTab(true)" class="flex-1 py-2 text-center font-medium text-lg rounded-l-md"
           [ngClass]="isUser ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'">
@@ -14,8 +12,7 @@
         </button>
       </div>
 
-      <!-- User Login Form -->
-      <form *ngIf="isUser && isLogin && !isFlipping" [formGroup]="userLoginForm" (ngSubmit)="onUserLogin()" class="space-y-4">
+      <form *ngIf="isUser && isLogin" [formGroup]="userLoginForm" (ngSubmit)="onUserLogin()" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Email</label>
           <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
@@ -41,8 +38,7 @@
         </div>
       </form>
 
-      <!-- User Register Form -->
-      <form *ngIf="isUser && !isLogin && !isFlipping" [formGroup]="userRegisterForm" (ngSubmit)="onUserRegister()" class="space-y-4">
+      <form *ngIf="isUser && !isLogin" [formGroup]="userRegisterForm" (ngSubmit)="onUserRegister()" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Name</label>
           <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />
@@ -76,8 +72,7 @@
         </div>
       </form>
 
-      <!-- Admin Login Form -->
-      <form *ngIf="!isUser && isLogin && !isFlipping" [formGroup]="adminLoginForm" (ngSubmit)="onAdminLogin()" class="space-y-4">
+      <form *ngIf="!isUser && isLogin" [formGroup]="adminLoginForm" (ngSubmit)="onAdminLogin()" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Email</label>
           <input type="email" formControlName="email" class="mt-1 block w-full p-2 border rounded-md" />
@@ -103,8 +98,7 @@
         </div>
       </form>
 
-      <!-- Admin Register Form -->
-      <form *ngIf="!isUser && !isLogin && !isFlipping" [formGroup]="adminRegisterForm" (ngSubmit)="onAdminRegister()" class="space-y-4">
+      <form *ngIf="!isUser && !isLogin" [formGroup]="adminRegisterForm" (ngSubmit)="onAdminRegister()" class="space-y-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Name</label>
           <input type="text" formControlName="name" class="mt-1 block w-full p-2 border rounded-md" />

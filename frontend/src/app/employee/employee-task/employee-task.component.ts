@@ -103,23 +103,6 @@ export class EmployeeTaskComponent implements OnInit {
     this.errorMessage = null;
   }
 
-  onSubmitComment() {
-    if (this.commentForm.valid && this.selectedTaskId) {
-      const commentData: TaskComment = this.commentForm.value;
-      this.taskService.addComment(this.selectedTaskId, commentData).subscribe({
-        next: (response) => {
-          console.log('Comment added:', response);
-          this.closeCommentModal();
-          this.loadMyTasks();
-        },
-        error: (err) => {
-          console.error('Error adding comment:', err.message);
-          this.errorMessage = `Error adding comment: ${err.message || 'Unknown error'}`;
-        }
-      });
-    }
-  }
-
   onDateChange(event: Event) {
     const target = event.target as HTMLInputElement;
     this.filterDate = target.value || '';
@@ -142,6 +125,6 @@ export class EmployeeTaskComponent implements OnInit {
 
   getOverdueTasksCount(): number {
     const now = new Date();
-    return this.tasks.filter(t => t.due_date && new Date(t.due_date) < now).length;
+    return this.tasks.filter(t => t.status!== 'Completed' && t.due_date && new Date(t.due_date) < now).length;
   }
 }

@@ -74,13 +74,4 @@ export class TaskService {
       })
     );
   }
-
-  addComment(taskId: string, commentData: TaskComment): Observable<TaskOut> {
-    return this.http.post<TaskOut>(`${this.baseUrl}/${taskId}/comment`, commentData, { headers: this.getHeaders() }).pipe(
-      catchError(error => {
-        console.error('Error adding comment:', error);
-        return throwError(() => ({ message: error.error?.detail || 'Error adding comment', detail: error.error?.detail }));
-      })
-    );
-  }
 }

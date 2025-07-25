@@ -162,7 +162,7 @@ export class EmployeeDashboardContentComponent {
   
   renderChart() {
       if (this.chartInstance) {
-        this.chartInstance.destroy(); // Destroy previous chart instance
+        this.chartInstance.destroy(); 
       }
   
       const overviews = this.getOverview();
@@ -172,30 +172,30 @@ export class EmployeeDashboardContentComponent {
         this.chartInstance = new Chart(ctx, {
           type: 'pie',
           data: {
-            labels: overviews.map(o => o.action), // overviews on y-axis
+            labels: overviews.map(o => o.action), 
             datasets: [{
               label: 'Overview',
-              data: overviews.map(o => o.count), // Multiply by 10 to simulate 10-100 range
+              data: overviews.map(o => o.count), 
               backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#4B66FF', '#FF9F40']
             }]
           },
           options: {
-            indexAxis: 'y', // Swap axes to put overviews on y-axis
+            indexAxis: 'y', 
             responsive: true,
             maintainAspectRatio: false,
             scales: {
               x: {
-                beginAtZero: true, // Start x-axis at 0
+                beginAtZero: true,
                 title: {
                   display: true,
                   text: 'Count'
                 },
                 ticks: {
-                  stepSize: 1, // Integer steps
-                  precision: 0 // No decimals
+                  stepSize: 1,
+                  precision: 0
                 },
-                min: 0, // Minimum value
-                max: 10 // Maximum value to match your 10-100 range
+                min: 0, 
+                max: 10 
               },
               y: {
                 title: {

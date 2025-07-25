@@ -119,7 +119,6 @@ export class AdminDashboardContentComponent implements OnInit {
     }
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
-    // Try a different endpoint based on your backend
     this.employeeService.getAllEmployees().subscribe({
         next: (data) => {
           this.employees = data;
@@ -175,7 +174,7 @@ export class AdminDashboardContentComponent implements OnInit {
 
   renderChart() {
     if (this.chartInstance) {
-      this.chartInstance.destroy(); // Destroy previous chart instance
+      this.chartInstance.destroy(); 
     }
 
     const departments = this.getEmployeesByDepartment();
@@ -185,30 +184,30 @@ export class AdminDashboardContentComponent implements OnInit {
       this.chartInstance = new Chart(ctx, {
         type: 'pie',
         data: {
-          labels: departments.map(d => d.department), // Departments on y-axis
+          labels: departments.map(d => d.department), 
           datasets: [{
             label: 'Employees',
-            data: departments.map(d => d.count), // Multiply by 10 to simulate 10-100 range
+            data: departments.map(d => d.count), 
             backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
           }]
         },
         options: {
-          indexAxis: 'y', // Swap axes to put departments on y-axis
+          indexAxis: 'y', 
           responsive: true,
           maintainAspectRatio: false,
           scales: {
             x: {
-              beginAtZero: true, // Start x-axis at 0
+              beginAtZero: true, 
               title: {
                 display: true,
                 text: 'Count'
               },
               ticks: {
-                stepSize: 1, // Integer steps
-                precision: 0 // No decimals
+                stepSize: 1, 
+                precision: 0 
               },
-              min: 0, // Minimum value
-              max: 10 // Maximum value to match your 10-100 range
+              min: 0, 
+              max: 10 
             },
             y: {
               title: {

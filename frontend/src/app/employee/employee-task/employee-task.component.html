@@ -98,7 +98,7 @@
           <td class="py-2 pl-4 border-b">
             <select (change)="updateTaskStatus(task.id, $event)" class="border border-gray-300 rounded-md p-1 w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option *ngIf="!task.status" value="">Select Status</option>
-              <option *ngFor="let status of ['Pending', 'In Progress', 'Completed']" [value]="status" [selected]="task.status === status">
+              <option *ngFor="let status of ['Pending', 'In Progress', 'On Hold', 'Completed']" [value]="status" [selected]="task.status === status">
                 {{ status }}
               </option>
             </select>
@@ -112,28 +112,4 @@
     <div *ngIf="filteredTasks.length === 0" class="text-center text-gray-500 mt-4">No tasks found.</div>
     </div>
   </div>
-
-  <!-- Comment Modal -->
-  <!-- <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-lg w-1/3 shadow-lg">
-      <h3 class="text-lg font-bold mb-4 text-gray-800">Add Comment</h3>
-      <form (ngSubmit)="onSubmitComment()" [formGroup]="commentForm" class="space-y-4">
-        <div>
-          <label for="user_id" class="block text-sm font-medium text-gray-700">User ID</label>
-          <input id="user_id" formControlName="user_id" type="text" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <div *ngIf="commentForm.get('user_id')?.touched && commentForm.get('user_id')?.invalid" class="text-red-500 text-sm">User ID is required</div>
-        </div>
-        <div>
-          <label for="message" class="block text-sm font-medium text-gray-700">Message</label>
-          <textarea id="message" formControlName="message" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
-          <div *ngIf="commentForm.get('message')?.touched && commentForm.get('message')?.invalid" class="text-red-500 text-sm">Message is required</div>
-        </div>
-        <div class="flex justify-end space-x-2">
-          <button type="button" (click)="closeCommentModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400">Cancel</button>
-          <button type="submit" [disabled]="!commentForm.valid" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Submit</button>
-        </div>
-      </form>
-      <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>
-    </div>
-  </div> -->
 </div>

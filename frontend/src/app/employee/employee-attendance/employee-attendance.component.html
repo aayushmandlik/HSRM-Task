@@ -15,14 +15,16 @@
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-4xl font-bold mb-4 text-slate-500">Manage Attendance</h3>
     <form [formGroup]="attendanceForm" (ngSubmit)="onSubmit()" class="mb-6">
-      <select formControlName="action" class="w-full p-2 border rounded mb-2">
+      <div class="flex gap-5 items-center">
+      <select formControlName="action" class="w-full p-3 border border-gray-500 rounded">
         <option value="" disabled selected>Select an action</option>
         <option value="checkin">Check-In</option>
         <option value="checkout">Check-Out</option>
         <option value="breakin">Break-In</option>
         <option value="breakout">Break-Out</option>
       </select>
-      <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Submit</button>
+      <button type="submit" class="w-1/2 p-3 bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white rounded">Submit</button>
+      </div>
     </form>
     <div *ngIf="successMessage" class="text-green-500 mb-2">{{ successMessage }}</div>
     <div *ngIf="errorMessage" class="text-red-500 mb-2">{{ errorMessage }}</div>

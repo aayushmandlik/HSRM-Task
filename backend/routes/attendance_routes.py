@@ -120,7 +120,6 @@ async def get_my_logs(current_user: TokenPayload = Depends(require_admin_or_user
             logger.info(f"No attendance logs found for user_id: {user_id}")
             return {"logs": []}
 
-        # Fetch employee name
         employee = await employee_collection.find_one({"user_id": user_id})
         employee_name = employee.get("name", "Unknown") if employee else "Unknown"
 
@@ -135,9 +134,9 @@ async def get_my_logs(current_user: TokenPayload = Depends(require_admin_or_user
                 "break_out": log.get("break_out"),
                 "status": log.get("status", AttendanceStatus.NOT_MARKED),
                 "total_hours": log.get("total_hours"),
-                "employee_name": employee_name  # Add employee name to each log
+                "employee_name": employee_name 
             }
-            del log["_id"]  # Remove _id after copying
+            del log["_id"] 
             processed_logs.append(Attendance(**log_dict))
 
         logger.info(f"Successfully retrieved {len(processed_logs)} logs for user_id: {user_id}")
