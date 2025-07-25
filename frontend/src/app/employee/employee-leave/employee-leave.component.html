@@ -11,7 +11,7 @@
       </div>
     </div>
     <div>
-      <button (click)="openModal()" class="bg-orange-500 text-white font-medium p-3 rounded-xl">Add Leave</button>
+      <button (click)="openModal()" class="bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Add Leave</button>
     </div>
   </div>
   
@@ -100,7 +100,7 @@
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded" [disabled]="leaveForm.invalid">Submit</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="leaveForm.invalid">Submit</button>
         </div>
       </form>
       <form *ngIf="selectedLeaveId" [formGroup]="updateForm" (ngSubmit)="onSubmitUpdate()" class="flex flex-col gap-4">
@@ -145,7 +145,7 @@
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded" [disabled]="updateForm.invalid">Update</button>
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="updateForm.invalid">Update</button>
         </div>
       </form>
       <div *ngIf="errorMessage" class="text-red-500 mt-2">{{ errorMessage }}</div>

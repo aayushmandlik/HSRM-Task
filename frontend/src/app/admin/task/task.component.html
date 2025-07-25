@@ -11,7 +11,7 @@
       </div>
     </div>
     <div>
-      <button (click)="openModal()" class="bg-orange-500 text-white font-medium p-3 rounded-xl">Add Task</button>
+      <button (click)="openModal()" class="bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Add Task</button>
     </div>
   </div>
   <div class="flex justify-between mt-10 gap-10">
@@ -150,7 +150,7 @@
         </div>
         <div class="mt-4 flex justify-end gap-2">
           <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-300 text-black rounded">Cancel</button>
-          <button type="submit" class="px-4 py-2 bg-orange-500 text-white rounded" [disabled]="taskForm.invalid">{{
+          <button type="submit" class="px-4 py-2 bg-gradient-to-r from-orange-300 via-orange-500 to-orange-600 text-white rounded" [disabled]="taskForm.invalid">{{
             selectedTaskId ? 'Update' : 'Submit' }}</button>
         </div>
       </form>

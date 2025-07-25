@@ -12,7 +12,7 @@ import { AuthService } from 'src/app/core/services/auth.service';
   styleUrls: ['./registered-users.component.css']
 })
 export class RegisteredUsersComponent implements OnInit {
-  registeredusersadmins: any[] = []
+  registeredusersadmins: TokenPayload[] = []
 
   constructor(private registeredService: RegisteredusersService, private authService: AuthService){}
 

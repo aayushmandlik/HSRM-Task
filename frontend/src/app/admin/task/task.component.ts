@@ -151,16 +151,18 @@ export class TaskComponent implements OnInit {
       this.errorMessage = 'Error deleting task: Task ID is undefined';
       return;
     }
-    this.taskService.deleteTask(taskId).subscribe({
-      next: (response) => {
-        console.log('Task deleted:', response);
-        this.loadTasks();
-      },
-      error: (err) => {
-        console.error('Error deleting task:', err.message);
-        this.errorMessage = `Error deleting task: ${err.message || 'Unknown error'}`;
-      }
-    });
+    if(confirm('Are you sure you want to delete this leave request?')){
+      this.taskService.deleteTask(taskId).subscribe({
+        next: (response) => {
+          console.log('Task deleted:', response);
+          this.loadTasks();
+        },
+        error: (err) => {
+          console.error('Error deleting task:', err.message);
+          this.errorMessage = `Error deleting task: ${err.message || 'Unknown error'}`;
+        }
+      });
+    }
   }
 
   filterTasks() {

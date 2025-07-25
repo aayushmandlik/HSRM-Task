@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { EmployeeCreate, EmployeeUpdate } from 'src/app/core/interfaces/employee.interface';
+import { EmployeeCreate, EmployeeOut, EmployeeUpdate } from 'src/app/core/interfaces/employee.interface';
 import { EmployeeService } from 'src/app/core/services/employee.service';
 import { AuthService } from 'src/app/core/services/auth.service';
 
@@ -15,8 +15,8 @@ import { AuthService } from 'src/app/core/services/auth.service';
 export class EmployeesComponent implements OnInit {
   isModalOpen = false;
   employeeForm: FormGroup;
-  employees: any[] = [];
-  filteredEmployees: any[] = [];
+  employees: EmployeeOut[] = [];
+  filteredEmployees: EmployeeOut[] = [];
   ttlempicon: string = '';
   selectedEmployeeId: string | null = null;
   errorMessage: string | null = null;
@@ -140,16 +140,18 @@ export class EmployeesComponent implements OnInit {
   }
 
   deleteEmployee(empCode: string) {
-    this.employeeService.deleteEmployee(empCode).subscribe({
-      next: (response) => {
-        console.log('Employee deleted:', response);
-        this.loadEmployees();
-      },
-      error: (err) => {
-        console.error('Error deleting employee:', err.message);
-        this.errorMessage = `Error deleting employee: ${err.message || 'Unknown error'}`;
-      }
-    });
+    if(confirm('Are you sure you want to delete this leave request?')){
+      this.employeeService.deleteEmployee(empCode).subscribe({
+        next: (response) => {
+          console.log('Employee deleted:', response);
+          this.loadEmployees();
+        },
+        error: (err) => {
+          console.error('Error deleting employee:', err.message);
+          this.errorMessage = `Error deleting employee: ${err.message || 'Unknown error'}`;
+        }
+      });
+    }
   }
 
   onSearch(event: Event) {

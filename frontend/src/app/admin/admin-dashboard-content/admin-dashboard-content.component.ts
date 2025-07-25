@@ -10,6 +10,8 @@ import { AttendanceService } from 'src/app/core/services/attendance.service';
 import { TaskOut } from 'src/app/core/interfaces/task.interface';
 import { TaskService } from 'src/app/core/services/task.service';
 import { LeaveService } from 'src/app/core/services/leave.service';
+import { Attendance } from 'src/app/core/interfaces/attendance.interface';
+import { EmployeeOut } from 'src/app/core/interfaces/employee.interface';
 
 @Component({
   selector: 'app-admin-dashboard-content',
@@ -24,8 +26,8 @@ export class AdminDashboardContentComponent implements OnInit {
   thoughtForTheDay: string = '';
   todoList: string[] = [];
   newTodo: string = '';
-  employees: any[] = [];
-  attendanceLogs: any[] = [];
+  employees: EmployeeOut[] = [];
+  attendanceLogs: Attendance[] = [];
   tasks: TaskOut[] = [];
   filterDate: string = new Date().toISOString().split('T')[0];
   private chartInstance: Chart | null = null;

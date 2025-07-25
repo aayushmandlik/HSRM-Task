@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { EmployeeCreate, EmployeeUpdate } from '../interfaces/employee.interface';
+import { EmployeeCreate, EmployeeOut, EmployeeUpdate } from '../interfaces/employee.interface';
 import { AuthService } from './auth.service';
 
 @Injectable({
@@ -21,8 +21,8 @@ export class EmployeeService {
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  getAllEmployees(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/getall`, { headers: this.getHeaders() }).pipe(
+  getAllEmployees(): Observable<EmployeeOut[]> {
+    return this.http.get<EmployeeOut[]>(`${this.baseUrl}/getall`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching employees:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error fetching employees', detail: error.error?.detail }));
@@ -30,8 +30,8 @@ export class EmployeeService {
     );
   }
 
-  createEmployee(employeeData: EmployeeCreate): Observable<any> {
-    return this.http.post(`${this.baseUrl}/create`, employeeData, { headers: this.getHeaders() }).pipe(
+  createEmployee(employeeData: EmployeeCreate): Observable<EmployeeOut> {
+    return this.http.post<EmployeeOut>(`${this.baseUrl}/create`, employeeData, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error creating employee:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error creating employee', detail: error.error?.detail }));
@@ -39,8 +39,8 @@ export class EmployeeService {
     );
   }
 
-  updateEmployee(empCode: string, employeeData: EmployeeUpdate): Observable<any> {
-    return this.http.put(`${this.baseUrl}/${empCode}`, employeeData, { headers: this.getHeaders() }).pipe(
+  updateEmployee(empCode: string, employeeData: EmployeeUpdate): Observable<EmployeeOut> {
+    return this.http.put<EmployeeOut>(`${this.baseUrl}/${empCode}`, employeeData, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error updating employee:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error updating employee', detail: error.error?.detail }));
@@ -48,8 +48,8 @@ export class EmployeeService {
     );
   }
 
-  deleteEmployee(empCode: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${empCode}`, { headers: this.getHeaders() }).pipe(
+  deleteEmployee(empCode: string): Observable<EmployeeOut> {
+    return this.http.delete<EmployeeOut>(`${this.baseUrl}/${empCode}`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error deleting employee:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error deleting employee', detail: error.error?.detail }));
