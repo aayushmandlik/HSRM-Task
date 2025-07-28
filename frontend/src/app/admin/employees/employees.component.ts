@@ -171,7 +171,7 @@ export class EmployeesComponent implements OnInit {
     this.departmentFilter = select.value;
     this.applyFilters();
   }
-
+  
   applyFilters() {
     this.filteredEmployees = this.employees.filter(employee => {
       const matchesSearch = employee.name.toLowerCase().includes(this.searchTerm);
@@ -190,10 +190,13 @@ export class EmployeesComponent implements OnInit {
   }
 
   get getNewJoinersCount(): number {
-    const oneMonthAgo = new Date('2025-06-22');
-    return this.employees.filter(employee => {
-      const joinDate = new Date(employee.date_of_joining);
-      return joinDate >= oneMonthAgo && joinDate <= new Date();
-    }).length;
-  }
+  const today = new Date();
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(today.getMonth() - 1);
+
+  return this.employees.filter(employee => {
+    const joinDate = new Date(employee.date_of_joining);
+    return joinDate >= oneMonthAgo && joinDate <= today;
+  }).length;
+}
 }

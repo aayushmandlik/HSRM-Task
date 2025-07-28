@@ -14,7 +14,6 @@ import { CommonModule } from '@angular/common';
 export class AuthComponent {
   isUser = true;
   isLogin = true;
-  isFlipping = false;
   userRegisterForm: FormGroup;
   userLoginForm: FormGroup;
   adminRegisterForm: FormGroup;
@@ -52,21 +51,17 @@ export class AuthComponent {
 
   selectTab(isUser: boolean): void {
     if (this.isUser !== isUser) {
-      this.isFlipping = true;
       setTimeout(() => {
         this.isUser = isUser;
         this.isLogin = true;
-        this.isFlipping = false;
         this.errorMessage = null;
       }, 500);
     }
   }
 
   toggleFormType(): void {
-    this.isFlipping = true;
     setTimeout(() => {
       this.isLogin = !this.isLogin;
-      this.isFlipping = false;
       this.errorMessage = null;
     }, 500);
   }
@@ -74,7 +69,11 @@ export class AuthComponent {
   onUserRegister(): void {
     if (this.userRegisterForm.valid) {
       this.authService.userRegister(this.userRegisterForm.value).subscribe({
-        next: () =>{alert("User Registered Successfully"); this.router.navigate(['/profile/dashboard'])},
+        next: () =>{
+          alert("User Registered Successfully.Please Log In to continue."); 
+          this.userRegisterForm.reset();
+          this.router.navigate(['/profile/dashboard'])
+        },
         error: (err) => this.errorMessage = err.error.detail || 'Registration failed'
       });
     }
@@ -92,7 +91,11 @@ export class AuthComponent {
   onAdminRegister(): void {
     if (this.adminRegisterForm.valid) {
       this.authService.adminRegister(this.adminRegisterForm.value).subscribe({
-        next: () => { alert("Admin Registered Successfully"); this.router.navigate(['/admin/dashboard'])},
+        next: () => { 
+          alert("Admin Registered Successfully"); 
+          this.adminRegisterForm.reset();
+          this.router.navigate(['/admin/dashboard'])
+        },
         error: (err) => this.errorMessage = err.error.detail || 'Registration failed'
       });
     }

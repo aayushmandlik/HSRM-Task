@@ -135,6 +135,7 @@
         <tr class="bg-slate-200 rounded-xl">
           <th class="text-left items-center p-3">Employee Name</th>
           <th class="text-left items-center p-3">Leave Type</th>
+          <th class="text-left items-center p-3">Requested At</th>
           <th class="text-left items-center p-3">Start Date</th>
           <th class="text-left items-center p-3">End Date</th>
           <th class="text-left items-center p-3">No of Days</th>
@@ -146,6 +147,7 @@
         <tr *ngFor="let leave of filteredApprovedRejectedLeaves" class="py-2">
           <td class="py-2 pl-3">{{ leave.employee_name }}</td>
           <td class="py-2 pl-3">{{ leave.leave_type }}</td>
+          <td class="py-2 pl-3">{{ leave.created_at | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.days }}</td>

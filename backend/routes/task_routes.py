@@ -98,7 +98,7 @@ async def update_task(task_id: str, task: TaskUpdate, current_admin: dict = Depe
         raise HTTPException(status_code=500, detail="Failed to update task")
     return TaskOut(id=str(updated["_id"]), **updated)
 
-@router.get("/my", response_model=List[TaskOut])
+@router.get("/mytasks", response_model=List[TaskOut])
 async def get_my_tasks(current_user: dict = Depends(get_current_user)):
     user_id = current_user["user_id"] 
     tasks = await task_collection.find({"assigned_to": {"$in": [user_id]}}).to_list(length=100)

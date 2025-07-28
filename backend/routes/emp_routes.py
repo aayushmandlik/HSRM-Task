@@ -55,15 +55,6 @@ async def update_employee(emp_code: str, data: EmployeeUpdate, current_admin: To
     updated["_id"] = str(updated["_id"])
     return updated
 
-@router.get("/manager/{manager_id}", response_model=List[EmployeeOut])
-async def get_employees_by_manager(manager_id: str, current_admin: TokenPayload = Depends(require_admin)):
-    cursor = employee_collection.find({"reporting_manager_id": manager_id})
-    employees = []
-    async for emp in cursor:
-        emp["_id"] = str(emp["_id"])
-        employees.append(emp)
-    return employees
-
 @router.delete("/{emp_code}", response_model=EmployeeOut)
 async def delete_employee(emp_code: str, current_admin: TokenPayload = Depends(require_admin)):
     employee = await employee_collection.find_one({"emp_code": emp_code})

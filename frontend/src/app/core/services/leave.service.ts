@@ -76,8 +76,8 @@ export class LeaveService {
     );
   }
 
-  deleteLeaveRequest(leaveId: string): Observable<any> {
-    return this.http.delete(`${this.empBaseUrl}/${leaveId}`, { headers: this.getHeaders() }).pipe(
+  deleteLeaveRequest(leaveId: string): Observable<LeaveResponse> {
+    return this.http.delete<LeaveResponse>(`${this.empBaseUrl}/${leaveId}`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error deleting leave:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error deleting leave', detail: error.error?.detail }));

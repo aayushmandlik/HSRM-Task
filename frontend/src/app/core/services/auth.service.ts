@@ -1,8 +1,7 @@
-// src/app/core/services/auth.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { UserRegister, UserLogin, AdminRegister, AdminLogin, TokenResponse } from '../interfaces/user.interface';
+import { UserRegister, UserLogin, AdminRegister, AdminLogin, TokenResponse, TokenPayload } from '../interfaces/user.interface';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
@@ -21,8 +20,8 @@ export class AuthService {
     }
   }
 
-  userRegister(user: UserRegister): Observable<any> {
-    return this.http.post(`${this.apiUrl}/users/register`, user).pipe(
+  userRegister(user: UserRegister): Observable<TokenPayload> {
+    return this.http.post<TokenPayload>(`${this.apiUrl}/users/register`, user).pipe(
       tap(() => {console.log('User registered')
       this.router.navigate(['/profile/dashboard']);})
     );
@@ -44,8 +43,8 @@ export class AuthService {
     );
   }
 
-  adminRegister(admin: AdminRegister): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/register`, admin).pipe(
+  adminRegister(admin: AdminRegister): Observable<TokenPayload> {
+    return this.http.post<TokenPayload>(`${this.apiUrl}/admin/register`, admin).pipe(
       tap(() => {console.log('Admin registered')
       this.router.navigate(['/admin/dashboard']);})
     );

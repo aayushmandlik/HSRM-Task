@@ -48,8 +48,8 @@ export class TaskService {
     );
   }
 
-  deleteTask(taskId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/${taskId}`, { headers: this.getHeaders() }).pipe(
+  deleteTask(taskId: string): Observable<TaskOut> {
+    return this.http.delete<TaskOut>(`${this.baseUrl}/${taskId}`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error deleting task:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error deleting task', detail: error.error?.detail }));
@@ -58,7 +58,7 @@ export class TaskService {
   }
 
   getMyTasks(): Observable<TaskOut[]> {
-    return this.http.get<TaskOut[]>(`${this.baseUrl}/my`, { headers: this.getHeaders() }).pipe(
+    return this.http.get<TaskOut[]>(`${this.baseUrl}/mytasks`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching tasks:', error);
         return throwError(() => ({ message: error.error?.detail || 'Error fetching tasks', detail: error.error?.detail }));

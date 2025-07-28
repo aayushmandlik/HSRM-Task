@@ -52,6 +52,8 @@ async def request_leave(
 
 
     emp = await employee_collection.find_one({"user_id": current_user.user_id})
+    if not emp:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"You are not an Employee/Not added in Employee List")
     employee_name = emp.get("name", "Unknown Employee") if emp else "Unknown Employee"
 
     leave_dict = leave.dict()
@@ -85,29 +87,75 @@ async def get_my_leave_requests(
         leaves.append(leave)
     return leaves
 
-@router.get("/{leave_id}", response_model=LeaveResponse)
-async def get_leave_details(
+@router.patch("/{leave_id}", response_model=LeaveResponse)
+async def update_leave_request(
+    leave_id: str,
+    update_data: LeaveUpdate,
+    current_user: TokenPayload = Depends(require_admin_or_user)
+):
+    try:
+        existing_leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
+
+        if not existing_leave:
+            raise HTTPException(status_code=404, detail="Leave request not found")
+
+        if existing_leave["employee_id"] != current_user.user_id:
+            raise HTTPException(status_code=403, detail="You are not authorized to update this leave request")
+
+        if existing_leave["status"] != LeaveStatus.PENDING:
+            raise HTTPException(status_code=400, detail="Only pending requests can be updated")
+
+        update_fields = {}
+        if update_data.start_date and update_data.end_date:
+            if update_data.start_date > update_data.end_date:
+                raise HTTPException(status_code=400, detail="End date must be after start date")
+            days = calculate_leave_days(update_data.start_date, update_data.end_date)
+
+            _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
+            if remaining_leaves < days:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Insufficient leave balance. Remaining: {remaining_leaves}, Requested: {days}"
+                )
+
+            update_fields["start_date"] = datetime.combine(update_data.start_date, datetime.min.time())
+            update_fields["end_date"] = datetime.combine(update_data.end_date, datetime.min.time())
+            update_fields["days"] = days
+            update_fields["remaining_leaves"] = remaining_leaves
+
+        if update_data.reason:
+            update_fields["reason"] = update_data.reason
+
+        update_fields["updated_at"] = datetime.utcnow()
+
+        await leave_collection.update_one({"_id": ObjectId(leave_id)}, {"$set": update_fields})
+        updated_leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
+        updated_leave["_id"] = str(updated_leave["_id"])
+        return updated_leave
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid leave ID format")
+
+@router.delete("/{leave_id}", response_model=LeaveResponse)
+async def delete_leave_request(
     leave_id: str,
     current_user: TokenPayload = Depends(require_admin_or_user)
 ):
     try:
         leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
+
         if not leave:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Leave request not found"
-            )
-        
-        if current_user.role != "admin" and leave["employee_id"] != current_user.user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to view this leave request"
-            )
-        
+            raise HTTPException(status_code=404, detail="Leave request not found")
+
+        if leave["employee_id"] != current_user.user_id:
+            raise HTTPException(status_code=403, detail="You are not authorized to delete this leave request")
+
+        if leave["status"] != LeaveStatus.PENDING:
+            raise HTTPException(status_code=400, detail="Only pending leave requests can be deleted")
+
+        await leave_collection.delete_one({"_id": ObjectId(leave_id)})
         leave["_id"] = str(leave["_id"])
         return leave
+
     except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid leave ID format"
-        )
+        raise HTTPException(status_code=400, detail="Invalid leave ID format")

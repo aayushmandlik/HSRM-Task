@@ -30,7 +30,7 @@ async def get_all_logs(
             raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD")
 
     logs = await attendance_collection.find(query).to_list(length=1000)
-    log_map = {log["user_id"]: log for log in logs}  # For faster lookup
+    log_map = {log["user_id"]: log for log in logs}
 
     employees = await employee_collection.find().to_list(length=1000)
     employee_logs = []

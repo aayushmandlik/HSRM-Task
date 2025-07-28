@@ -129,27 +129,6 @@ export class LeaveComponent implements OnInit {
     }
   }
 
-  showTooltip(leaveId: string, reason: string) {
-    this.hoveredLeaveId = leaveId;
-    this.tooltipText = reason || 'No reason provided';
-    this.tooltipVisible = true;
-  }
-
-  hideTooltip() {
-    this.tooltipVisible = false;
-    this.hoveredLeaveId = null;
-    this.tooltipText = '';
-  }
-
-  @HostListener('document:click', ['$event'])
-  onClick(event: MouseEvent) {
-    if (this.tooltipVisible && !this.isModalOpen) {
-      const tooltip = document.querySelector('.absolute.bg-gray-800');
-      if (tooltip && !tooltip.contains(event.target as Node)) {
-        this.hideTooltip();
-      }
-    }
-  }
 
   get pendingLeavesCount(): number {
     return this.pendingLeaves.length;

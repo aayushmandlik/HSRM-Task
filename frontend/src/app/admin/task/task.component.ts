@@ -22,6 +22,7 @@ export class TaskComponent implements OnInit {
   errorMessage: string | null = null;
   searchTerm: string = '';
   filterDate: string = '';
+  filterStatus: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -185,7 +186,10 @@ export class TaskComponent implements OnInit {
       const matchesDate = !this.filterDate ||
         createdAtStr.startsWith(this.filterDate);
 
-      return matchesSearch && matchesDate;
+      const matchesStatus = !this.filterStatus || task.status === this.filterStatus
+
+      return matchesSearch && matchesDate && matchesStatus;
+
     });
   }
 
@@ -198,6 +202,12 @@ export class TaskComponent implements OnInit {
     this.filterDate = (event.target as HTMLInputElement).value;
     this.filterTasks();
   }
+
+  onFilterStatus(event: Event) {
+    this.filterStatus = (event.target as HTMLInputElement).value;
+    this.filterTasks();
+  }
+
 
   getPendingTasksCount(): number {
     return this.tasks.filter(t => t.status === 'Pending').length;

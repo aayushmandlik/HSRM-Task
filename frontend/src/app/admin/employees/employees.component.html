@@ -208,10 +208,13 @@
         class="h-10 rounded-md border border-gray-300 shadow-sm px-3"
         (change)="onFilterDepartment($event)"
       >
-        <option value="">All Departments</option>
-        <option value="FSD">FSD</option>
-        <option value="DE">DE</option>
+        <option value="">Select Department</option>
+        <option value="Frontend Dev">Frontend Dev</option>
+        <option value="Full Stack Dev">Full Stack Dev</option>
+        <option value="Data Engineer">Data Engineer</option>
+        <option value="Data Analyst">Data Analyst</option>
         <option value="Devops">Devops</option>
+
       </select>
     </div>
     <table class="w-full">
@@ -232,7 +235,7 @@
       <tbody>
         <tr *ngFor="let employee of filteredEmployees" class="py-2">
           <td class="py-2 pl-5">{{ employee.emp_code }}</td>
-          <td class="py-2 pl-5"><img src={{employee.profile_image}} alt="no picture" class="w-6 h-6 rounded-full ring-1 ring-green-400"></td>
+          <td class="py-2 pl-5"><img src={{employee.profile_image}} alt="profile picture" class="w-6 h-6 rounded-full ring-1 ring-green-400"></td>
           <td class="py-2 pl-3">{{ employee.name }}</td>
           <td class="py-2 pl-1">{{ employee.email }}</td>
           <td class="py-2 pl-1">{{ employee.phone }}</td>
