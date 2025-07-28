@@ -12,7 +12,7 @@ router = APIRouter(prefix="/tasks", tags={"Tasks"})
 async def create_task(task: TaskCreate, current_admin: dict = Depends(require_admin)):
     
     assigned_user_ids = []
-    for name in task.assigned_to_emails:
+    for name in task.assigned_to:
         emp = await employee_collection.find_one({"name": name.strip()})
         if not emp:
             raise HTTPException(status_code=404, detail=f"Employee not found for name: {name}")
@@ -68,11 +68,11 @@ async def update_task(task_id: str, task: TaskUpdate, current_admin: dict = Depe
         update_data["title"] = task.title
     if task.description is not None:
         update_data["description"] = task.description
-    if task.assigned_to_emails is not None:
-        if not isinstance(task.assigned_to_emails, list):
-            raise HTTPException(status_code=400, detail="assigned_to_emails must be a list")
+    if task.assigned_to is not None:
+        if not isinstance(task.assigned_to, list):
+            raise HTTPException(status_code=400, detail="assigned_to must be a list")
         assigned_user_ids = []
-        for name in task.assigned_to_emails:
+        for name in task.assigned_to:
             emp = await employee_collection.find_one({"name": name.strip()})
             if not emp:
                 raise HTTPException(status_code=404, detail=f"Employee not found for name: {name}")

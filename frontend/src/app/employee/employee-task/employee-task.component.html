@@ -67,24 +67,26 @@
       <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange($event)" placeholder="Search by title..." class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-[50%]">
       <input type="date" [(ngModel)]="filterDate" (change)="onDateChange($event)" class="border border-gray-300 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
-    <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+    <div class="overflow-x-auto">
+    <table class="bg-white border border-gray-200 rounded-lg shadow-md min-w-[1200px]">
       <thead>
         <tr class="bg-slate-200 rounded-xl">
-          <th class="py-3 px-4 border-b text-left font-semibold rounded-l-md">Title</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Description</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Assigned To</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Assigned By</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Created At</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Status</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Priority</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Due Date</th>
-          <th class="py-3 px-4 border-b text-left font-semibold">Project</th>
+          <th class="py-3 px-4 border-b text-left font-semibold rounded-l-md min-w-40">Title</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Description</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Project</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Assigned To</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Assigned By</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Created At</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-40">Status</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-28">Priority</th>
+          <th class="py-3 px-4 border-b text-left font-semibold min-w-72">Due Date</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let task of filteredTasks" class="hover:bg-gray-50 transition duration-200">
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.title }}</td>
           <td class="py-2 pl-4 border-b text-gray-600">{{ task.description }}</td>
+          <td class="py-2 pl-4 border-b text-gray-700">{{ task.project || 'N/A' }}</td>
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.assigned_to.join(', ') }}</td>
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.assigned_by }}</td>
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.created_at | date:'medium' }}</td>
@@ -98,10 +100,10 @@
           </td>
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.priority }}</td>
           <td class="py-2 pl-4 border-b text-gray-700">{{ task.due_date | date:'medium' }}</td>
-          <td class="py-2 pl-4 border-b text-gray-700">{{ task.project || 'N/A' }}</td>
         </tr>
       </tbody>
     </table>
+    </div>
     <div *ngIf="filteredTasks.length === 0" class="text-center text-gray-500 mt-4">No tasks found.</div>
     </div>
   </div>

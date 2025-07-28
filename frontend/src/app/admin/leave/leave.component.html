@@ -151,7 +151,10 @@
           <td class="py-2 pl-3">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-3">{{ leave.days }}</td>
-          <td class="py-2 pl-3">{{ leave.status }}</td>
+          <td class="py-2 pl-3"><span class="px-2 py-1 rounded-md font-medium flex w-24 justify-center" [ngClass]="{
+            'bg-green-100 text-green-700': leave.status == 'approved',
+            'bg-red-100 text-red-700': leave.status == 'rejected'
+          }">{{ leave.status | titlecase }}</span></td>
           <td class="py-2 pl-3">{{ leave.approved_by || 'N/A' }}</td>
         </tr>
       </tbody>

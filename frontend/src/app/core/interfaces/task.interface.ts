@@ -7,7 +7,7 @@ export interface CommentSchema {
 export interface TaskCreate {
   title: string;
   description: string;
-  assigned_to_emails: string[];
+  assigned_to: string[];
   assigned_by: string;
   priority?: string;
   due_date?: Date;
@@ -18,7 +18,7 @@ export interface TaskCreate {
 export interface TaskUpdate {
   title?: string;
   description?: string;
-  assigned_to_emails?: string[];
+  assigned_to?: string[];
   assigned_by?: string;
   priority?: string;
   due_date?: Date;

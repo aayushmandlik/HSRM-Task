@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TaskCreate, TaskOut, TaskUpdate } from 'src/app/core/interfaces/task.interface';
 import { TaskService } from 'src/app/core/services/task.service';
 import { AuthService } from 'src/app/core/services/auth.service';
+import { EmployeeService } from 'src/app/core/services/employee.service';
+import { EmployeeOut } from 'src/app/core/interfaces/employee.interface';
 
 @Component({
   selector: 'app-tasks',
@@ -23,16 +25,20 @@ export class TaskComponent implements OnInit {
   searchTerm: string = '';
   filterDate: string = '';
   filterStatus: string | null = null;
+  emp_names: EmployeeOut[] = []
+  filteredNames: string[] = []
+  showSuggestions = false
 
   constructor(
     private fb: FormBuilder,
     private taskService: TaskService,
-    private authService: AuthService
+    private authService: AuthService,
+    private employeeService: EmployeeService
   ) {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      assigned_to_emails: [''],
+      assigned_to: [''],
       assigned_by: ['', [Validators.required]],
       priority: ['Normal', [Validators.required]],
       due_date: [''],
@@ -43,6 +49,7 @@ export class TaskComponent implements OnInit {
 
   ngOnInit() {
     this.loadTasks();
+    this.loadEmployees();
   }
 
   openModal(taskId: string | null = null) {
@@ -58,7 +65,7 @@ export class TaskComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title || '',
           description: task.description || '',
-          assigned_to_emails: task.assigned_to.length ? task.assigned_to.join(', ') : '',
+          assigned_to: task.assigned_to.length ? task.assigned_to.join(', ') : '',
           assigned_by: task.assigned_by || '',
           priority: task.priority || 'Normal',
           due_date: task.due_date || '',
@@ -82,15 +89,15 @@ export class TaskComponent implements OnInit {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
      
-      const assignedToEmails = typeof formValue.assigned_to_emails === 'string' && formValue.assigned_to_emails.trim()
-        ? formValue.assigned_to_emails.split(',').map((email: string) => email.trim())
+      const assignedToEmails = typeof formValue.assigned_to === 'string' && formValue.assigned_to.trim()
+        ? formValue.assigned_to.split(',').map((email: string) => email.trim())
         : [];
 
      
       const taskData = {
         title: formValue.title,
         description: formValue.description,
-        assigned_to_emails: assignedToEmails,
+        assigned_to: assignedToEmails,
         assigned_by: formValue.assigned_by,
         priority: formValue.priority,
         due_date: formValue.due_date || '',
@@ -192,6 +199,20 @@ export class TaskComponent implements OnInit {
 
     });
   }
+
+  loadEmployees() {
+    this.employeeService.getAllEmployees().subscribe({
+      next: (data) => {
+        this.emp_names = data;
+        console.log('Loaded Employees:', data);
+      },
+      error: (err) => {
+        console.error('Error loading employees:', err.message);
+        this.errorMessage = `Error loading employees: ${err.message || 'Unknown error'}`;
+      }
+    });
+  }
+
 
   onSearch(event: Event) {
     this.searchTerm = (event.target as HTMLInputElement).value;
