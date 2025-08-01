@@ -149,7 +149,7 @@ export class LeaveComponent implements OnInit {
   }
 
   get remainingLeaves(): number {
-    const initialLeaves = 20;
+    const initialLeaves = 30;
     return initialLeaves - this.totalLeavesTaken;
   }
 

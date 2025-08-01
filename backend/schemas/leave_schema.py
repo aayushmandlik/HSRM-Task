@@ -1,7 +1,7 @@
 from pydantic import BaseModel,Field
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional,Dict
 
 class LeaveStatus(str, Enum):
     PENDING = "pending"
@@ -26,8 +26,13 @@ class LeaveResponse(BaseModel):
     days: int
     created_at: datetime
     updated_at: datetime
-    leave_taken: int = 0
-    remaining_leaves: int = 20
+    # leave_taken: int = 0
+    # remaining_leaves: int = 30
+    leave_balances: Dict[str,int]={
+        "Medical":10,
+        "Casual":10,
+        "Annual":10
+    }
     approved_by: Optional[str] = None 
 
     class Config:

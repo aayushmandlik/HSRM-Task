@@ -15,36 +15,42 @@
     </div>
   </div>
   
-    <div class="flex justify-between mt-10 gap-10">
-    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+  <div class="flex justify-between mt-10 gap-10">
+    <!-- <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
-          alt="" class="w-12 h-12">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png" alt="" class="w-12 h-12">
         <div>
           <p class="font-bold text-2xl text-slate-400">Pending Leaves</p>
         </div>
       </div>
       <div class="flex text-5xl bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-semibold">{{pendingLeavesCount}}</div>
+    </div> -->
+    <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
+      <div class="flex gap-1 items-center">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png" alt="" class="w-12 h-12">
+        <div>
+          <p class="font-bold text-2xl text-slate-400">Medical Leaves Remaining</p>
+        </div>
+      </div>
+      <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{medicalLeavesRemaining}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
-          alt="" class="w-12 h-12">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png" alt="" class="w-12 h-12">
         <div>
-          <p class="font-bold text-2xl text-slate-400">Total Leaves Taken</p>
+          <p class="font-bold text-2xl text-slate-400">Casual Leaves Remaining</p>
         </div>
       </div>
-      <div class="flex text-5xl bg-green-200 text-green-700 px-2 py-1 rounded-md font-semibold">{{totalLeavesTaken}}</div>
+      <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{casualLeavesRemaining}}</div>
     </div>
     <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
-        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png"
-          alt="" class="w-12 h-12">
+        <img src="https://cdn-icons-png.flaticon.com/128/10722/10722554.png" alt="" class="w-12 h-12">
         <div>
-          <p class="font-bold text-2xl text-slate-400">Remaining Leaves</p>
+          <p class="font-bold text-2xl text-slate-400">Annual Leaves Remaining</p>
         </div>
       </div>
-      <div class="flex text-5xl bg-red-200 text-red-700 px-2 py-1 rounded-md font-semibold">{{remainingLeaves}}</div>
+      <div class="flex text-5xl bg-blue-200 text-blue-700 px-2 py-1 rounded-md font-semibold">{{annualLeavesRemaining}}</div>
     </div>
   </div>
 
@@ -80,7 +86,6 @@
                 <option value="Medical">Medical</option>
                 <option value="Casual">Casual</option>
                 <option value="Annual">Annual</option>
-                <option value="Others">Others</option>
               </select>
             <div *ngIf="leaveForm.get('leave_type')?.invalid && leaveForm.get('leave_type')?.touched" class="text-red-500 text-sm">
               Leave type is required
@@ -125,7 +130,6 @@
                 <option value="Medical">Medical</option>
                 <option value="Casual">Casual</option>
                 <option value="Annual">Annual</option>
-                <option value="Others">Others</option>
               </select>
             <div *ngIf="updateForm.get('leave_type')?.invalid && updateForm.get('leave_type')?.touched" class="text-red-500 text-sm">
               Leave type is required
@@ -167,17 +171,21 @@
       </thead>
       <tbody>
         <tr *ngFor="let leave of leaves" class="py-2 hover:bg-gray-50 transition duration-200 border-b">
-          <td class="py-2 pl-4 border-b flex items-center gap-2">
+          <td class="py-2 pl-4 flex items-center gap-2">
             {{ leave.leave_type }}
             <span class="cursor-pointer" [title]="leave.reason">
-              <img src="https://cdn-icons-png.flaticon.com/128/11420/11420166.png" alt="" class="w-5 h-5 mt-1">
+              <img src="https://cdn-icons-png.flaticon.com/128/11420/11420166.png" alt="" class="w-7 h-7 mt-1">
             </span>
           </td>
           <td class="py-2 pl-4">{{ leave.start_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-4">{{ leave.end_date | date:'yyyy-MM-dd' }}</td>
           <td class="py-2 pl-4">{{ leave.days }}</td>
-          <td class="py-2 pl-4">{{ leave.status }}</td>
-          <td class="py-2 pl-4">{{ leave.approved_by || 'N/A' }}</td>
+          <td class="py-2 pl-4"><span class="px-2 py-1 rounded-md font-medium flex w-24 justify-center" [ngClass]="{
+            'bg-slate-100 text-slate-700': leave.status == 'pending',
+            'bg-green-100 text-green-700': leave.status == 'approved',
+            'bg-red-100 text-red-700': leave.status == 'rejected'
+          }">{{ leave.status | titlecase }}</span></td>
+          <td class="py-2 pl-4">{{ leave.approved_by || 'N/A'}}</td>
           <td class="py-2 pl-4">
             <button 
               (click)="openModal(leave._id)" 

@@ -5,22 +5,27 @@ from datetime import date, datetime
 from bson import ObjectId
 from schemas.employee_schema import EmployeeCreate, EmployeeUpdate, EmployeeOut
 from core.security import require_admin,get_current_user, TokenPayload
-from databases.database import employee_collection, users_collection
+from databases.database import employee_collection, users_collection, admins_collection
 
 router = APIRouter(prefix="/employee", tags=['Employee'])
 
 @router.post("/create", response_model=EmployeeOut)
 async def create_employee(data: EmployeeCreate, current_admin: TokenPayload = Depends(require_admin)):
     user = await users_collection.find_one({"email": data.email})
-    if not user:
+    admin = await admins_collection.find_one({"email":data.email})
+    if not user and not admin:
         raise HTTPException(status_code=400, detail="User with this email does not exist")
     
     existing = await employee_collection.find_one({"email": data.email})
     if existing:
         raise HTTPException(status_code=400, detail="Employee with this email already exists")
     
+    
     employee_dict = data.dict()
-    employee_dict["user_id"] = str(user["_id"]) if user and "_id" in user else None
+    if user:
+        employee_dict["user_id"] = str(user["_id"]) if user and "_id" in user else None
+    if admin:
+        employee_dict["user_id"] = str(admin["_id"]) if admin and "_id" in admin else None
     result = await employee_collection.insert_one(employee_dict)
     employee_dict["_id"] = str(result.inserted_id)
     return employee_dict

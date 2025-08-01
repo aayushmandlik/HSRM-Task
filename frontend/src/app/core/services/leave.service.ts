@@ -62,7 +62,7 @@ export class LeaveService {
     return this.http.post<LeaveResponse>(`${this.empBaseUrl}/request`, leaveData, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error submitting leave request:', error);
-        return throwError(() => ({ message: error.error?.detail || 'Error submitting leave request', detail: error.error?.detail }));
+        return throwError(() => ({ message: error.error?.detail || 'Error submitting leaves request', detail: error.error?.detail }));
       })
     );
   }

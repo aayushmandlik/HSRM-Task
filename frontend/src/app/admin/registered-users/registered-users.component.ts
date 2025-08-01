@@ -14,6 +14,7 @@ import { AuthService } from 'src/app/core/services/auth.service';
 export class RegisteredUsersComponent implements OnInit {
   searchTerm: string = '';
   filterRole: string | null = null;
+  sortUsers: string = '';
   filteredUsers: TokenPayload[] = []
   registeredusersadmins: TokenPayload[] = []
 
@@ -29,6 +30,7 @@ export class RegisteredUsersComponent implements OnInit {
       next: (data)=>{
         this.registeredusersadmins = data;
         this.filterUsers();
+        // this.sortbyName();
         console.log("Loaded Users: ",data)
       },
       error: (err) => {
@@ -57,6 +59,31 @@ export class RegisteredUsersComponent implements OnInit {
 
       return matchesSearch && matchesRole
     })
+    this.applySort();
+  }
+
+  onSortChange(event: Event){
+    this.sortUsers = (event.target as HTMLSelectElement).value
+    this.applySort()
+  }
+
+  applySort(){
+    if(this.sortUsers == "name"){
+      this.sortbyName();
+    }
+    else if(this.sortUsers == "latest"){
+      this.sortbyLatest();
+    }
+  }
+
+  sortbyName(){
+    return this.filteredUsers.sort((a,b) => 
+      a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+    )
+  }
+
+  sortbyLatest(){
+    this.filteredUsers = [...this.filteredUsers].reverse()
   }
   
 }

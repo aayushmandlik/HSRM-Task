@@ -26,7 +26,9 @@ async def register(admin: AdminRegister):
 @router.post("/login", response_model=TokenResponse)
 async def login(admin: AdminLogin):
     record = await admins_collection.find_one({"email": admin.email})
-    if not record or not pwd_context.verify(admin.password, record["password"]):
+    if not record:
+        raise HTTPException(status_code=404, detail="Email Not Found")
+    if not pwd_context.verify(admin.password, record["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
     token = create_access_token({"user_id": str(record["_id"]),"email": record["email"], "role": "admin", "name": record["name"]})

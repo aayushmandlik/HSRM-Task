@@ -18,7 +18,11 @@ export interface LeaveResponse {
   created_at: string;
   updated_at: string;
   leave_taken: number;
-  remaining_leaves: number;
+  leave_balances: {
+    Medical : number,
+    Casual: number,
+    Annual: number
+  }
   approved_by: string | null;
 }
 

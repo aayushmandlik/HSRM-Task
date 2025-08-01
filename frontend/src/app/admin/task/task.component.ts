@@ -89,15 +89,15 @@ export class TaskComponent implements OnInit {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
      
-      const assignedToEmails = typeof formValue.assigned_to === 'string' && formValue.assigned_to.trim()
-        ? formValue.assigned_to.split(',').map((email: string) => email.trim())
+      const assignedToNames = typeof formValue.assigned_to === 'string' && formValue.assigned_to.trim()
+        ? formValue.assigned_to.split(',').map((name: string) => name.trim())
         : [];
 
      
       const taskData = {
         title: formValue.title,
         description: formValue.description,
-        assigned_to: assignedToEmails,
+        assigned_to: assignedToNames,
         assigned_by: formValue.assigned_by,
         priority: formValue.priority,
         due_date: formValue.due_date || '',

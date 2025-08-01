@@ -20,12 +20,18 @@
         placeholder="Search tasks..." 
         (input)="onSearch($event)" 
         class="p-2 border border-gray-300 rounded-md w-1/3">
+      <!-- <select name="sort" id="sort" class="border rounded px-2 py-1" (change)="onSortChange($event)">
+        <option value="">Sort By</option>
+        <option value="latest">Sort by Latest</option>
+        <option value="name">Sort by Name</option>
+      </select> -->
       <select (change)="onFilterRole($event)"
         class="p-2 border border-gray-300 rounded-md w-1/3 block shadow-sm text-center">
         <option value="">Select Role</option>
         <option value="user">User</option>
         <option value="admin">Admin</option>
       </select>
+      <button (click)="sortbyName()" class="bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Sort By Names</button>
     </div>
     <table class="w-full border-collapse">
       <thead>

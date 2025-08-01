@@ -1,28 +1,47 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
-from typing import List
+from typing import List,Dict
 from bson import ObjectId
-from schemas.leave_schema import LeaveCreate, LeaveResponse, LeaveUpdate,LeaveUpdateStatus, LeaveStatus
-from databases.database import leave_collection, employee_collection, users_collection 
+from schemas.leave_schema import LeaveCreate,LeaveResponse,LeaveStatus,LeaveUpdate,LeaveUpdateStatus
+from databases.database import leave_collection, employee_collection
 from core.security import require_admin, require_admin_or_user, TokenPayload
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 
 router = APIRouter(prefix="/Emp_leave", tags=["Employee Leave"])
 
 def calculate_leave_days(start_date: date, end_date: date) -> int:
     return (end_date - start_date).days + 1
 
-async def get_employee_leave_balance(employee_id: str) -> tuple[int, int]:
-    cursor = leave_collection.find({
-        "employee_id": employee_id,
-        "status": LeaveStatus.APPROVED
-    })
-    days_list = [leave["days"] async for leave in cursor]
-    approved_leaves = len(days_list)
-    total_days_taken = sum(days_list) if days_list else 0
-    remaining_leaves = 20 - total_days_taken
-    return total_days_taken, max(0, remaining_leaves)
+async def get_employee_leave_balance(employee_id: str, leave_type: str = None) -> tuple[int, int] | Dict[str, int]:
+    if leave_type:
+        if leave_type not in ["Medical", "Casual", "Annual"]:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid leave type: {leave_type}. Must be Medical, Casual, or Annual"
+            )
+        cursor = leave_collection.find({
+            "employee_id": employee_id,
+            "status": LeaveStatus.APPROVED,
+            "leave_type": leave_type
+        })
+        days_list = [leave["days"] async for leave in cursor]
+        total_days_taken = sum(days_list) if days_list else 0
+        initial_balance = {"Medical": 10, "Casual": 10, "Annual": 10}.get(leave_type, 10)
+        remaining_leaves = initial_balance - total_days_taken
+        return total_days_taken, max(0, remaining_leaves)
+    else:
+        leave_types = ["Medical", "Casual", "Annual"]
+        balances = {}
+        for lt in leave_types:
+            cursor = leave_collection.find({
+                "employee_id": employee_id,
+                "status": LeaveStatus.APPROVED,
+                "leave_type": lt
+            })
+            days_list = [leave["days"] async for leave in cursor]
+            total_days_taken = sum(days_list) if days_list else 0
+            initial_balance = 10
+            balances[lt] = max(0, initial_balance - total_days_taken)
+        return balances
 
 @router.post("/request", response_model=LeaveResponse)
 async def request_leave(
@@ -42,18 +61,22 @@ async def request_leave(
             detail="Invalid date range"
         )
 
+    if leave.leave_type not in ["Medical", "Casual", "Annual"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid leave type. Must be Medical, Casual, or Annual"
+        )
 
-    _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
+    _, remaining_leaves = await get_employee_leave_balance(current_user.user_id, leave.leave_type)
     if remaining_leaves < days:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Insufficient leave balance. Remaining: {remaining_leaves} days, Requested: {days} days"
+            detail=f"Insufficient {leave.leave_type} leave balance. Remaining: {remaining_leaves} days, Requested: {days} days"
         )
-
 
     emp = await employee_collection.find_one({"user_id": current_user.user_id})
     if not emp:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f"You are not an Employee/Not added in Employee List")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You are not an Employee/Not added in Employee List")
     employee_name = emp.get("name", "Unknown Employee") if emp else "Unknown Employee"
 
     leave_dict = leave.dict()
@@ -66,15 +89,13 @@ async def request_leave(
         "days": days,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow(),
-        "leave_taken": 0,
-        "remaining_leaves": remaining_leaves,
+        "leave_balances": await get_employee_leave_balance(current_user.user_id),
         "approved_by": None
     })
     
     result = await leave_collection.insert_one(leave_dict)
     leave_dict["_id"] = str(result.inserted_id)
     return leave_dict
-
 
 @router.get("/my-requests", response_model=List[LeaveResponse])
 async def get_my_leave_requests(
@@ -83,6 +104,7 @@ async def get_my_leave_requests(
     leaves_cursor = leave_collection.find({"employee_id": current_user.user_id})
     leaves = []
     async for leave in leaves_cursor:
+        leave["leave_balances"] = await get_employee_leave_balance(current_user.user_id)
         leave["_id"] = str(leave["_id"])
         leaves.append(leave)
     return leaves
@@ -95,7 +117,6 @@ async def update_leave_request(
 ):
     try:
         existing_leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
-
         if not existing_leave:
             raise HTTPException(status_code=404, detail="Leave request not found")
 
@@ -106,27 +127,37 @@ async def update_leave_request(
             raise HTTPException(status_code=400, detail="Only pending requests can be updated")
 
         update_fields = {}
+        leave_type = update_data.leave_type or existing_leave["leave_type"]
+
         if update_data.start_date and update_data.end_date:
             if update_data.start_date > update_data.end_date:
                 raise HTTPException(status_code=400, detail="End date must be after start date")
             days = calculate_leave_days(update_data.start_date, update_data.end_date)
 
-            _, remaining_leaves = await get_employee_leave_balance(current_user.user_id)
+            if leave_type not in ["Medical", "Casual", "Annual"]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid leave type. Must be Medical, Casual, or Annual"
+                )
+
+            _, remaining_leaves = await get_employee_leave_balance(current_user.user_id, leave_type)
             if remaining_leaves < days:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Insufficient leave balance. Remaining: {remaining_leaves}, Requested: {days}"
+                    detail=f"Insufficient {leave_type} leave balance. Remaining: {remaining_leaves}, Requested: {days}"
                 )
 
             update_fields["start_date"] = datetime.combine(update_data.start_date, datetime.min.time())
             update_fields["end_date"] = datetime.combine(update_data.end_date, datetime.min.time())
             update_fields["days"] = days
-            update_fields["remaining_leaves"] = remaining_leaves
 
         if update_data.reason:
             update_fields["reason"] = update_data.reason
+        if update_data.leave_type:
+            update_fields["leave_type"] = update_data.leave_type
 
         update_fields["updated_at"] = datetime.utcnow()
+        update_fields["leave_balances"] = await get_employee_leave_balance(current_user.user_id)
 
         await leave_collection.update_one({"_id": ObjectId(leave_id)}, {"$set": update_fields})
         updated_leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
@@ -143,7 +174,6 @@ async def delete_leave_request(
 ):
     try:
         leave = await leave_collection.find_one({"_id": ObjectId(leave_id)})
-
         if not leave:
             raise HTTPException(status_code=404, detail="Leave request not found")
 
@@ -159,3 +189,4 @@ async def delete_leave_request(
 
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid leave ID format")
+

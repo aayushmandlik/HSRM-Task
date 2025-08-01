@@ -90,7 +90,7 @@ export class EmployeeDashboardContentComponent {
   }
 
   get remainingLeavesCount(): number {
-    const initialLeaves = 20;
+    const initialLeaves = 30;
     return initialLeaves - this.totalLeavesTaken; 
   }
   

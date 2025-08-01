@@ -90,15 +90,15 @@ export class EmployeeLeaveComponent implements OnInit {
         console.log('Pre-filling with:', leave);
         if (this.selectedLeaveId) {
           this.updateForm.patchValue({
-            start_date: leave.start_date,
-            end_date: leave.end_date,
+            start_date: new Date(leave.start_date).toISOString().split('T')[0],
+            end_date: new Date(leave.end_date).toISOString().split('T')[0],
             leave_type: leave.leave_type,
             reason: leave.reason
           });
         } else {
           this.leaveForm.patchValue({
-            start_date: leave.start_date,
-            end_date: leave.end_date,
+            start_date: new Date(leave.start_date).toISOString().split('T')[0],
+            end_date: new Date(leave.end_date).toISOString().split('T')[0],
             leave_type: leave.leave_type,
             reason: leave.reason
           });
@@ -156,18 +156,15 @@ export class EmployeeLeaveComponent implements OnInit {
     return this.leaves.filter(leave => leave.status === 'pending').length;
   }
 
-  get approvedLeavesCount(): number {
-    return this.leaves.filter(leave => leave.status === 'approved').length;
+  get medicalLeavesRemaining(): number {
+    return this.leaves.length > 0 ? this.leaves[0].leave_balances?.Medical || 10 : 10;
   }
 
-  get totalLeavesTaken(): number {
-    return this.leaves
-      .filter(leave => leave.status === 'approved')
-      .reduce((sum, leave) => sum + leave.days, 0);
+  get casualLeavesRemaining(): number {
+    return this.leaves.length > 0 ? this.leaves[0].leave_balances?.Casual || 10 : 10;
   }
 
-  get remainingLeaves(): number {
-    const initialLeaves = 20;
-    return initialLeaves - this.totalLeavesTaken;
+  get annualLeavesRemaining(): number {
+    return this.leaves.length > 0 ? this.leaves[0].leave_balances?.Annual || 10 : 10;
   }
 }

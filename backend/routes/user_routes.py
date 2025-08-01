@@ -33,7 +33,9 @@ async def register(user: UserRegister):
 @router.post("/login", response_model=TokenResponse)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     record = await users_collection.find_one({"email": form_data.username})
-    if not record or not pwd_context.verify(form_data.password, record["password"]):
+    if not record:
+        raise HTTPException(status_code=404, detail="Email Not Found")
+    if not pwd_context.verify(form_data.password, record["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     token = create_access_token({
