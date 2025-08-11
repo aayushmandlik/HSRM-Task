@@ -82,7 +82,7 @@
               class="mt-1 block w-full h-20 rounded-md border border-gray-300 shadow-sm text-center"></textarea>
           </div>
           <div class="flex gap-4">
-            <div class="w-1/2">
+            <!-- <div class="w-1/2">
               <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assigned To (Names)</label>
               <input id="assigned_to" formControlName="assigned_to" type="text" list="emp_names"
                 class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center"
@@ -90,15 +90,15 @@
                 <datalist id="emp_names" class="overflow-y-auto">
                   <option *ngFor="let emp of emp_names" value="{{emp.name}}">{{emp.name}}</option>
                 </datalist>
-            </div>
-            
-            <!-- <div class="w-1/2">
+            </div> -->
+
+            <div class="w-1/2">
               <label for="assigned_to" class="block text-sm font-medium text-gray-700">Assigned To (Names)</label>
-              <select multiple name="assigned_to" id="assigned_to" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
+              <select formControlName="assigned_to" multiple name="assigned_to" id="assigned_to" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
                 <option value="">Select Employee</option>
                 <option *ngFor="let emp of emp_names" value={{emp.name}}>{{emp.name}}</option>
               </select>
-            </div> -->
+            </div>
             <div class="w-1/2">
               <label for="assigned_by" class="block text-sm font-medium text-gray-700">Assigned By</label>
               <input id="assigned_by" formControlName="assigned_by" type="text" placeholder="Eg. Nilesh Rawale"
@@ -153,10 +153,10 @@
   <div class="mt-6 bg-white p-4 rounded-lg shadow-md">
     <h3 class="text-4xl font-bold mb-4 text-slate-500">All Tasks</h3>
     <div class="flex justify-between items-center my-5">
-      <input 
-        type="text" 
-        placeholder="Search tasks..." 
-        (input)="onSearch($event)" 
+      <input
+        type="text"
+        placeholder="Search tasks..."
+        (input)="onSearch($event)"
         class="p-2 border border-gray-300 rounded-md w-1/3">
       <select (change)="onFilterStatus($event)"
         class="p-2 border border-gray-300 rounded-md w-1/3 block shadow-sm text-center">
@@ -166,9 +166,9 @@
         <option value="In Progress">In Progress</option>
         <option value="On Hold">On Hold</option>
       </select>
-      <input 
-        type="date" 
-        (input)="onDateFilter($event)" 
+      <input
+        type="date"
+        (input)="onDateFilter($event)"
         class="p-2 border border-gray-300 rounded-md">
     </div>
     <div class="overflow-x-auto">
@@ -194,7 +194,7 @@
           <td class="p-3">{{ task.description }}</td>
           <td class="p-3">{{ task.assigned_to.join(', ') }}</td>
           <td class="p-3">{{ task.assigned_by }}</td>
-          <td class="p-3"> <span class="px-2 py-1 rounded-md font-medium flex w-28 justify-center" 
+          <td class="p-3"> <span class="px-2 py-1 rounded-md font-medium flex w-28 justify-center"
             [ngClass]="{'bg-yellow-200 text-yellow-700': task.status==='Pending',
             'bg-green-200 text-green-700':task.status==='Completed',
             'bg-blue-200 text-blue-700': task.status==='In Progress',

@@ -38,7 +38,7 @@ export class TaskComponent implements OnInit {
     this.taskForm = this.fb.group({
       title: ['', [Validators.required]],
       description: ['', [Validators.required]],
-      assigned_to: [''],
+      assigned_to: [[],[Validators.required]],
       assigned_by: ['', [Validators.required]],
       priority: ['Normal', [Validators.required]],
       due_date: [''],
@@ -65,7 +65,8 @@ export class TaskComponent implements OnInit {
         this.taskForm.patchValue({
           title: task.title || '',
           description: task.description || '',
-          assigned_to: task.assigned_to.length ? task.assigned_to.join(', ') : '',
+          // assigned_to: task.assigned_to.length ? task.assigned_to.join(', ') : '',
+          assigned_to: task.assigned_to || [],
           assigned_by: task.assigned_by || '',
           priority: task.priority || 'Normal',
           due_date: task.due_date || '',
@@ -88,16 +89,17 @@ export class TaskComponent implements OnInit {
   onSubmit() {
     if (this.taskForm.valid) {
       const formValue = this.taskForm.value;
-     
+
       const assignedToNames = typeof formValue.assigned_to === 'string' && formValue.assigned_to.trim()
         ? formValue.assigned_to.split(',').map((name: string) => name.trim())
         : [];
 
-     
+
       const taskData = {
         title: formValue.title,
         description: formValue.description,
-        assigned_to: assignedToNames,
+        // assigned_to: assignedToNames,
+        assigned_to: formValue.assigned_to,
         assigned_by: formValue.assigned_by,
         priority: formValue.priority,
         due_date: formValue.due_date || '',
@@ -108,7 +110,7 @@ export class TaskComponent implements OnInit {
       console.log('Submitting Data:', taskData);
 
       if (this.selectedTaskId) {
-       
+
         const updateData: TaskUpdate = taskData;
         this.taskService.updateTask(this.selectedTaskId, updateData).subscribe({
           next: (response) => {
@@ -122,7 +124,7 @@ export class TaskComponent implements OnInit {
           }
         });
       } else {
-      
+
         const createData: TaskCreate = taskData;
         this.taskService.createTask(createData).subscribe({
           next: (response) => {

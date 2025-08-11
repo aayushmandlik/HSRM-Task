@@ -45,10 +45,10 @@
       <tbody>
         <tr *ngFor="let log of attendanceLogs" class="border-b border-gray-200 hover:bg-gray-50 transition-colors">
           <td class="p-3">{{ log.check_in | date:'dd-MM-yyyy' }}</td>
-          <td class="p-3">{{ log.check_in | date:'HH:mm' || 'N/A' }}</td>
-          <td class="p-3">{{ log.check_out | date:'HH:mm' || 'N/A' }}</td>
-          <td class="p-3">{{ log.break_in | date:'HH:mm' || 'N/A' }}</td>
-          <td class="p-3">{{ log.break_out | date:'HH:mm' || 'N/A' }}</td>
+          <td class="p-3">{{ log.check_in | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.check_out | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.break_in | date:'HH:mm' }}</td>
+          <td class="p-3">{{ log.break_out | date:'HH:mm' }}</td>
           <td class="p-3">{{ log.total_hours || 'N/A' }}</td>
           <td class="p-3">{{ log.status }}</td>
         </tr>

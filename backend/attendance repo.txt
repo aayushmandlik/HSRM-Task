@@ -1,0 +1,421 @@
+attendance repo
+
+from databases.database import attendance_collection, employee_collection
+from datetime import datetime
+from typing import Optional
+
+async def find_today_checkin(user_id: str, today: datetime):
+    return await attendance_collection.find_one({
+        "user_id": user_id,
+        "check_in": {"$gte": datetime(today.year, today.month, today.day)}
+    })
+
+async def insert_checkin(user_id: str):
+    return await attendance_collection.insert_one({
+        "user_id": user_id,
+        "check_in": datetime.now(),
+        "check_out": None,
+        "break_in": None,
+        "break_out": None,
+        "status": "PRESENT",
+        "total_hours": None
+    })
+
+async def find_active_attendance(user_id: str):
+    return await attendance_collection.find_one({
+        "user_id": user_id,
+        "check_out": None
+    })
+
+async def update_checkout(record_id, now, total_hours):
+    return await attendance_collection.update_one(
+        {"_id": record_id},
+        {"$set": {
+            "check_out": now,
+            "total_hours": round(total_hours, 2),
+            "status": "PRESENT"
+        }}
+    )
+
+async def find_for_break_in(user_id: str):
+    return await attendance_collection.find_one({
+        "user_id": user_id,
+        "check_out": None,
+        "break_in": None
+    })
+
+async def update_break_in(record_id):
+    return await attendance_collection.update_one(
+        {"_id": record_id},
+        {"$set": {"break_in": datetime.now()}}
+    )
+
+async def find_for_break_out(user_id: str):
+    return await attendance_collection.find_one({
+        "user_id": user_id,
+        "check_out": None,
+        "break_in": {"$ne": None},
+        "break_out": None
+    })
+
+async def update_break_out(record_id):
+    return await attendance_collection.update_one(
+        {"_id": record_id},
+        {"$set": {"break_out": datetime.now()}}
+    )
+
+async def find_logs(user_id: str):
+    return await attendance_collection.find({"user_id": user_id}).to_list(length=100)
+
+async def find_employee(user_id: str):
+    return await employee_collection.find_one({"user_id": user_id})
+
+
+attendance service
+from datetime import datetime
+from schemas.attendance_schema import Attendance, AttendanceStatus
+from repositories import attendance_repository as repo
+from fastapi import HTTPException
+import logging
+
+logger = logging.getLogger(__name__)
+
+async def check_in(user_id: str):
+    today = datetime.now().date()
+    record = await repo.find_today_checkin(user_id, today)
+    if record:
+        raise HTTPException(status_code=400, detail="Already checked in today")
+    await repo.insert_checkin(user_id)
+    return {"message": "Check-in successful"}
+
+async def check_out(user_id: str):
+    now = datetime.now()
+    record = await repo.find_active_attendance(user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="No active check-in")
+
+    check_in_time = record["check_in"]
+    total_hours = (now - check_in_time).total_seconds() / 3600
+
+    if record.get("break_in") and record.get("break_out"):
+        break_duration = (record["break_out"] - record["break_in"]).total_seconds() / 3600
+        total_hours -= break_duration
+
+    await repo.update_checkout(record["_id"], now, total_hours)
+    return {"message": "Check-out successful"}
+
+async def break_in(user_id: str):
+    record = await repo.find_for_break_in(user_id)
+    if not record or record.get("break_out"):
+        raise HTTPException(status_code=400, detail="Cannot start break or break already in progress")
+    await repo.update_break_in(record["_id"])
+    return {"message": "Break-in successful"}
+
+async def break_out(user_id: str):
+    record = await repo.find_for_break_out(user_id)
+    if not record:
+        raise HTTPException(status_code=400, detail="No active break to end")
+    await repo.update_break_out(record["_id"])
+    return {"message": "Break-out successful"}
+
+async def get_my_logs(user_id: str):
+    try:
+        logs = await repo.find_logs(user_id)
+        if not logs:
+            logger.info(f"No attendance logs found for user_id: {user_id}")
+            return {"logs": []}
+
+        employee = await repo.find_employee(user_id)
+        employee_name = employee.get("name", "Unknown") if employee else "Unknown"
+
+        processed_logs = []
+        for log in logs:
+            log_dict = {
+                "id": str(log["_id"]),
+                "user_id": log["user_id"],
+                "check_in": log.get("check_in"),
+                "check_out": log.get("check_out"),
+                "break_in": log.get("break_in"),
+                "break_out": log.get("break_out"),
+                "status": log.get("status", AttendanceStatus.NOT_MARKED),
+                "total_hours": log.get("total_hours"),
+                "employee_name": employee_name
+            }
+            processed_logs.append(Attendance(**log_dict))
+
+        logger.info(f"Retrieved {len(processed_logs)} logs for user_id: {user_id}")
+        return {"logs": processed_logs}
+    except Exception as e:
+        logger.error(f"Error in get_my_logs: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+attendance routes
+from fastapi import APIRouter, Depends
+from core.security import require_admin_or_user
+from schemas.token_schema import TokenPayload
+from services import attendance_service as service
+
+router = APIRouter(prefix="/attendance", tags=["Attendance"])
+
+@router.post("/checkin")
+async def check_in(current_user: TokenPayload = Depends(require_admin_or_user)):
+    return await service.check_in(current_user.user_id)
+
+@router.post("/checkout")
+async def check_out(current_user: TokenPayload = Depends(require_admin_or_user)):
+    return await service.check_out(current_user.user_id)
+
+@router.post("/breakin")
+async def break_in(current_user: TokenPayload = Depends(require_admin_or_user)):
+    return await service.break_in(current_user.user_id)
+
+@router.post("/breakout")
+async def break_out(current_user: TokenPayload = Depends(require_admin_or_user)):
+    return await service.break_out(current_user.user_id)
+
+@router.get("/logs/me")
+async def get_my_logs(current_user: TokenPayload = Depends(require_admin_or_user)):
+    return await service.get_my_logs(current_user.user_id)
+
+
+adminleave repo
+from datetime import date, datetime
+from bson import ObjectId
+from databases.database import leave_collection
+
+async def find_all_leaves():
+    return leave_collection.find()
+
+async def find_pending_leaves():
+    return leave_collection.find({"status": "pending"})
+
+async def find_leave_by_id(leave_id: str):
+    return await leave_collection.find_one({"_id": ObjectId(leave_id)})
+
+async def update_leave(leave_id: str, update_data: dict):
+    return await leave_collection.update_one(
+        {"_id": ObjectId(leave_id)},
+        {"$set": update_data}
+    )
+
+admin leave service
+from datetime import date, datetime
+from typing import List
+from fastapi import HTTPException, status
+from schemas.leave_schema import LeaveResponse, LeaveStatus
+from routes.leave_routes import get_employee_leave_balance
+from repositories.admin_leave_repository import (
+    find_all_leaves, find_pending_leaves, find_leave_by_id, update_leave
+)
+
+async def get_all_leave_requests():
+    leaves_cursor = await find_all_leaves()
+    return await process_leave_cursor(leaves_cursor)
+
+async def get_pending_leave_requests():
+    leaves_cursor = await find_pending_leaves()
+    return await process_leave_cursor(leaves_cursor)
+
+async def process_leave_cursor(leaves_cursor):
+    leaves = []
+    async for leave in leaves_cursor:
+        leave_type = leave.get("leave_type", "Unknown")
+        if leave_type not in ["Medical", "Casual", "Annual", "Unknown"]:
+            leave_type = "Unknown"
+        employee_id = leave.get("employee_id", "")
+        if not employee_id:
+            continue
+        leave_balances = await get_employee_leave_balance(employee_id)
+        leaves.append(LeaveResponse(
+            _id=str(leave["_id"]),
+            employee_id=employee_id,
+            employee_name=leave.get("employee_name", "Unknown Employee"),
+            start_date=leave.get("start_date").date() if leave.get("start_date") else date.today(),
+            end_date=leave.get("end_date").date() if leave.get("end_date") else date.today(),
+            leave_type=leave_type,
+            reason=leave.get("reason", ""),
+            status=LeaveStatus(leave.get("status", "pending")),
+            days=leave.get("days", 0),
+            created_at=leave.get("created_at") if leave.get("created_at") else datetime.utcnow(),
+            updated_at=leave.get("updated_at") if leave.get("updated_at") else datetime.utcnow(),
+            leave_balances=leave_balances,
+            approved_by=leave.get("approved_by")
+        ))
+    return leaves
+
+async def update_leave_status_service(leave_id: str, leave_update):
+    leave = await find_leave_by_id(leave_id)
+    if not leave:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Leave request not found")
+
+    leave_type = leave.get("leave_type", "Unknown")
+    if leave_type not in ["Medical", "Casual", "Annual"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid leave type: {leave_type}. Must be Medical, Casual, or Annual"
+        )
+
+    employee_id = leave.get("employee_id", "")
+    if not employee_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Employee ID is missing in leave record")
+
+    update_data = {
+        "status": leave_update.status,
+        "approved_by": leave_update.approved_by,
+        "updated_at": datetime.utcnow()
+    }
+
+    if leave_update.status == LeaveStatus.APPROVED and leave.get("status") != "approved":
+        _, remaining_leaves = await get_employee_leave_balance(employee_id, leave_type)
+        if remaining_leaves < leave.get("days", 0):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Insufficient {leave_type} leave balance. Remaining: {remaining_leaves} days, Requested: {leave.get('days', 0)} days"
+            )
+        leave_balances = await get_employee_leave_balance(employee_id)
+        leave_balances[leave_type] = max(0, leave_balances[leave_type] - leave.get("days", 0))
+        update_data["leave_balances"] = leave_balances
+
+    await update_leave(leave_id, update_data)
+
+    updated_leave = await find_leave_by_id(leave_id)
+    updated_leave_balances = await get_employee_leave_balance(updated_leave.get("employee_id", ""))
+
+    return LeaveResponse(
+        _id=str(updated_leave["_id"]),
+        employee_id=updated_leave.get("employee_id", ""),
+        employee_name=updated_leave.get("employee_name", "Unknown Employee"),
+        start_date=updated_leave.get("start_date").date() if updated_leave.get("start_date") else date.today(),
+        end_date=updated_leave.get("end_date").date() if updated_leave.get("end_date") else date.today(),
+        leave_type=updated_leave.get("leave_type", "Unknown"),
+        reason=updated_leave.get("reason", ""),
+        status=LeaveStatus(updated_leave.get("status", "pending")),
+        days=updated_leave.get("days", 0),
+        created_at=updated_leave.get("created_at") if updated_leave.get("created_at") else datetime.utcnow(),
+        updated_at=updated_leave.get("updated_at") if updated_leave.get("updated_at") else datetime.utcnow(),
+        leave_balances=updated_leave_balances,
+        approved_by=updated_leave.get("approved_by")
+    )
+
+admin leave routes
+from fastapi import APIRouter, Depends
+from typing import List
+from schemas.leave_schema import LeaveResponse, LeaveUpdateStatus
+from core.security import require_admin, TokenPayload
+from services.admin_leave_service import (
+    get_all_leave_requests,
+    get_pending_leave_requests,
+    update_leave_status_service
+)
+
+router = APIRouter(prefix="/admin/leave", tags=["Admin Leave"])
+
+@router.get("/leaverequests", response_model=List[LeaveResponse])
+async def get_leave_requests(current_admin: TokenPayload = Depends(require_admin)):
+    return await get_all_leave_requests()
+
+@router.get("/pendingrequests", response_model=List[LeaveResponse])
+async def get_pending_leave_requests(current_admin: TokenPayload = Depends(require_admin)):
+    return await get_pending_leave_requests()
+
+@router.put("/{leave_id}/status", response_model=LeaveResponse)
+async def update_leave_status(
+    leave_id: str,
+    leave_update: LeaveUpdateStatus,
+    current_admin: TokenPayload = Depends(require_admin)
+):
+    return await update_leave_status_service(leave_id, leave_update)
+
+
+admin attendance repo
+from databases.database import attendance_collection, employee_collection
+from datetime import datetime, timedelta
+
+async def get_attendance_logs_by_date(date=None):
+    query = {}
+    if date:
+        filter_date = datetime.strptime(date, "%Y-%m-%d").date()
+        query["check_in"] = {
+            "$gte": datetime(filter_date.year, filter_date.month, filter_date.day),
+            "$lt": datetime(filter_date.year, filter_date.month, filter_date.day) + timedelta(days=1)
+        }
+    return await attendance_collection.find(query).to_list(length=1000)
+
+async def get_all_employees():
+    return await employee_collection.find().to_list(length=1000)
+
+
+admin attendance service
+from datetime import datetime
+from bson.objectid import ObjectId
+from schemas.attendance_schema import Attendance, AttendanceStatus
+from repositories.admin_attendance_repository import get_attendance_logs_by_date, get_all_employees
+
+async def fetch_all_attendance_logs(date=None):
+    logs = await get_attendance_logs_by_date(date)
+    log_map = {log["user_id"]: log for log in logs}
+
+    employees = await get_all_employees()
+    employee_logs = []
+
+    filter_date = None
+    if date:
+        filter_date = datetime.strptime(date, "%Y-%m-%d").date()
+
+    for emp in employees:
+        if emp["status"] != "Active":
+            continue
+
+        emp_id = emp["user_id"]
+        emp_name = emp.get("name", "Unknown")
+        log = log_map.get(emp_id)
+
+        if log:
+            log["id"] = str(log["_id"])
+            del log["_id"]
+
+            if not log.get("check_in"):
+                log["status"] = AttendanceStatus.ABSENT if (filter_date and filter_date < datetime.now().date()) else AttendanceStatus.NOT_MARKED
+            elif log.get("check_in") and not log.get("check_out"):
+                log["status"] = AttendanceStatus.PRESENT
+            else:
+                log["status"] = AttendanceStatus.PRESENT
+
+            log["employee_name"] = emp_name
+            employee_logs.append(Attendance(**log))
+        else:
+            status = AttendanceStatus.ABSENT if (filter_date and filter_date < datetime.now().date()) else AttendanceStatus.NOT_MARKED
+            emp_attendance = {
+                "id": str(ObjectId()),
+                "user_id": emp_id,
+                "check_in": None,
+                "check_out": None,
+                "break_in": None,
+                "break_out": None,
+                "status": status,
+                "total_hours": None,
+                "employee_name": emp_name
+            }
+            employee_logs.append(Attendance(**emp_attendance))
+
+    return {"logs": employee_logs}
+
+admin attendance routes
+from fastapi import APIRouter, Depends, HTTPException
+from core.security import require_admin
+from schemas.token_schema import TokenPayload
+from services.admin_attendance_service import fetch_all_attendance_logs
+
+router = APIRouter(prefix="/admin/attendance", tags=["Admin Attendance"])
+
+@router.get("/logs")
+async def get_all_logs(
+    current_user: TokenPayload = Depends(require_admin),
+    date: str = None
+):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admins only")
+
+    return await fetch_all_attendance_logs(date)
+

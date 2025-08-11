@@ -24,6 +24,6 @@ async def find_employee_by_name(name:str):
     return await employee_collection.find_one({"name":name.strip()})
 
 async def find_employee_by_user_id(user_ids: list):
-    return await employee_collection.find({"user_id": {"$in":[user_ids]}}).to_list(length=len(user_ids))
+    return await employee_collection.find({"user_id": {"$in":user_ids}}).to_list(length=len(user_ids))
 
 

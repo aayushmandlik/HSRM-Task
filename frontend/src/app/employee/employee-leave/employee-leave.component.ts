@@ -20,6 +20,7 @@ export class EmployeeLeaveComponent implements OnInit {
   successMessage: string | null = null;
   isModalOpen: boolean = false;
   selectedLeaveId: string | null = null;
+  currentDate: string = new Date().toISOString().split('T')[0]
 
   constructor(
     private fb: FormBuilder,

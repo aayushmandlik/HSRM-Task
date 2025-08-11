@@ -14,7 +14,7 @@
       <button (click)="openModal()" class="bg-gradient-to-b from-orange-300 via-orange-500 to-orange-600 text-white font-medium p-3 rounded-xl">Add Leave</button>
     </div>
   </div>
-  
+
   <div class="flex justify-between mt-10 gap-10">
     <!-- <div class="flex card bg-white items-center p-5 gap-1 rounded-lg w-full justify-between">
       <div class="flex gap-1 items-center">
@@ -64,14 +64,14 @@
         <div class="flex gap-4">
           <div class="w-1/2">
             <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-            <input id="start_date" formControlName="start_date" type="date" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
+            <input [min]="currentDate" id="start_date" formControlName="start_date" type="date" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             <div *ngIf="leaveForm.get('start_date')?.invalid && leaveForm.get('start_date')?.touched" class="text-red-500 text-sm">
               Start date is required
             </div>
           </div>
           <div class="w-1/2">
             <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-            <input id="end_date" formControlName="end_date" type="date" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
+            <input [min]="currentDate" id="end_date" formControlName="end_date" type="date" class="mt-1 block w-full h-12 rounded-md border border-gray-300 shadow-sm text-center">
             <div *ngIf="leaveForm.get('end_date')?.invalid && leaveForm.get('end_date')?.touched" class="text-red-500 text-sm">
               End date is required
             </div>
@@ -187,14 +187,14 @@
           }">{{ leave.status | titlecase }}</span></td>
           <td class="py-2 pl-4">{{ leave.approved_by || 'N/A'}}</td>
           <td class="py-2 pl-4">
-            <button 
-              (click)="openModal(leave._id)" 
+            <button
+              (click)="openModal(leave._id)"
               [disabled]="leave.status === 'approved' || leave.status === 'rejected'"
               [ngClass]="{'opacity-50 cursor-not-allowed': leave.status === 'approved' || leave.status === 'rejected'}">
               <img src="https://cdn-icons-png.flaticon.com/128/12102/12102064.png" alt="Edit" class="w-4 h-4">
             </button>
-            <button 
-              (click)="deleteLeave(leave._id)" 
+            <button
+              (click)="deleteLeave(leave._id)"
               [disabled]="leave.status === 'approved' || leave.status === 'rejected'"
               [ngClass]="{'opacity-50 cursor-not-allowed': leave.status === 'approved' || leave.status === 'rejected'}">
               <img src="https://cdn-icons-png.flaticon.com/128/9790/9790368.png" alt="Delete" class="w-4 h-4 ml-5">
